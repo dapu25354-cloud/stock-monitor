@@ -30,6 +30,21 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Verify Telegram secrets are configured
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          if [ -z "$TG_TOKEN" ]; then
+            echo "::error::TG_TOKEN secret is not set. Go to repo Settings -> Secrets and variables -> Actions to add it."
+            exit 1
+          fi
+          if [ -z "$TG_CHAT_ID" ]; then
+            echo "::error::TG_CHAT_ID secret is not set."
+            exit 1
+          fi
+          echo "Both secrets configured (TG_TOKEN length=${#TG_TOKEN}, TG_CHAT_ID length=${#TG_CHAT_ID})"
+
       - name: Run Stock Monitor
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
