@@ -1,4 +1,5 @@
 name: Test Telegram Notification
+# Last re-trigger: 2026-05-17 verifying new token after BotFather revoke
 
 on:
   workflow_dispatch:
