@@ -1,0 +1,82 @@
+:root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --text: #c9d1d9;
+    --accent: #58a6ff;
+    --up: #23d160;
+    --down: #f85149;
+    --border: #30363d;
+}
+
+body { background-color: var(--bg); color: var(--text); font-family: system-ui; display: flex; justify-content: center; margin: 0; padding: 20px; }
+.container { width: 100%; max-width: 900px; background: var(--card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); }
+
+header { text-align: center; margin-bottom: 30px; }
+header h1 { color: var(--accent); margin: 0; }
+#time-tag { font-family: monospace; color: #8b949e; }
+
+h2 { font-size: 1.2rem; border-left: 4px solid var(--accent); padding-left: 10px; margin-top: 30px; }
+
+/* 股票網格 */
+.stock-grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 15px; 
+    margin-top: 15px; 
+}
+@media (max-width: 900px) {
+    .stock-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+    .stock-grid { grid-template-columns: 1fr; }
+}
+.stock-card { 
+    background: #161b22; 
+    padding: 15px; 
+    border-radius: 8px; 
+    border: 1px solid var(--border); 
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+}
+.stock-card h3 { margin: 0; font-size: 0.9rem; color: #f0f6fc; display: flex; justify-content: space-between; align-items: center; }
+.stock-card .price { font-size: 1.2rem; font-weight: bold; margin: 4px 0; color: var(--accent); }
+.stock-card .status { font-size: 0.7rem; font-weight: bold; padding: 2px 5px; border-radius: 4px; display: inline-block; width: fit-content; }
+.bull { color: var(--up); border: 1px solid var(--up); }
+.bear { color: var(--down); border: 1px solid var(--down); }
+.advice { font-size: 0.75rem; color: #8b949e; margin-top: 5px; line-height: 1.2; }
+
+/* 專業版額外樣式 */
+.metric-row { 
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 0.75rem; 
+    color: #8b949e; 
+}
+.highlight { color: #58a6ff; font-weight: bold; }
+.chip-text { 
+    color: #f85149; 
+    font-size: 0.7rem; 
+    margin-top: 6px; 
+    border-top: 1px solid #30363d; 
+    padding-top: 6px;
+    font-family: monospace;
+}
+.signal-badge { 
+    padding: 1px 6px; 
+    border-radius: 10px; 
+    font-size: 0.65rem; 
+}
+.success-bg { background: #23d160; color: #000; font-weight: bold; }
+.normal-bg { background: #30363d; color: #8b949e; }
+
+/* 任務列表 */
+.add-todo { display: flex; gap: 10px; margin: 15px 0; }
+input { flex: 1; background: #0d1117; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; }
+button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; }
+ul { list-style: none; padding: 0; }
+li { background: #21262d; padding: 12px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; border: 1px solid var(--border); }
+.delete-btn { background: var(--down); font-size: 0.7rem; padding: 4px 8px; }
+
+hr { border: 0; border-top: 1px solid var(--border); margin: 40px 0; }

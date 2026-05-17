@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專業指標監控中心</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .stock-card { min-width: 250px; position: relative; }
+        .signal-badge { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; }
+        .success-bg { background: #23d160; color: #000; font-weight: bold; }
+        .normal-bg { background: #30363d; color: #8b949e; }
+        .metric-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 5px; color: #8b949e; }
+        .highlight { color: #58a6ff; font-weight: bold; }
+        .chip-text { color: #f85149; font-size: 0.75rem; margin-top: 8px; border-top: 1px solid #30363d; padding-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💎 專業指標監控中心</h1>
+            <p id="time-tag"></p>
+        </header>
+
+        <section class="stock-section">
+            <h2>📈 即時監控 (TD/KD/MACD/主力)</h2>
+            <div id="stock-grid" class="stock-grid">
+                <p>正在分析 21 檔核心標的，請稍候...</p>
+            </div>
+        </section>
+
+        <hr>
+
+        <section class="todo-section">
+            <h2>📝 任務管理</h2>
+            <div class="add-todo">
+                <input type="text" id="todo-input" placeholder="新增提醒事項..." />
+                <button id="add-btn">新增</button>
+            </div>
+            <ul id="todo-list"></ul>
+        </section>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

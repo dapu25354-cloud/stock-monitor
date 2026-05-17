@@ -1,0 +1,28 @@
+# Local data and secrets
+backend/data.json
+.env
+.env.*
+config.json
+__pycache__/
+*.pyc
+*.pyo
+
+# Python venv
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Project temp files
+.gemini/
+C:/Users/admin/.gemini/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
