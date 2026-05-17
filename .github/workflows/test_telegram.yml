@@ -1,0 +1,35 @@
+name: Test Telegram Notification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/test_telegram.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Telegram test message
+        env:
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: |
+          if [ -z "$TG_TOKEN" ] || [ -z "$TG_CHAT_ID" ]; then
+            echo "::error::Secrets not set"
+            exit 1
+          fi
+          NOW_UTC=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          NOW_TPE=$(TZ=Asia/Taipei date +%Y-%m-%d\ %H:%M:%S)
+          MSG="🧪 *GitHub Actions Telegram 通道測試*%0A時間：${NOW_TPE} (台北)%0A來源：repo dapu25354-cloud/stock-monitor%0A若您看到本訊息，表示 TG_TOKEN / TG_CHAT_ID secrets 設定正確，自動通知通道暢通。"
+          response=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST "https://api.telegram.org/bot$TG_TOKEN/sendMessage" \
+            -d chat_id="$TG_CHAT_ID" \
+            -d parse_mode="Markdown" \
+            -d text="$MSG")
+          echo "$response"
+          http_code=$(echo "$response" | grep HTTP_STATUS | cut -d: -f2)
+          if [ "$http_code" != "200" ]; then
+            echo "::error::Telegram API returned HTTP $http_code"
+            exit 1
+          fi
+          echo "::notice::Telegram test message sent successfully"
