@@ -28,7 +28,7 @@ jobs:
           cache: 'pip'
 
       - name: Install dependencies
-        run: pip install requests yfinance pandas
+        run: pip install -r requirements.txt
 
       - name: Run Stock Monitor
         env:
