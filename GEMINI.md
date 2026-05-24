@@ -20,4 +20,4 @@
 
 ## Maintenance Notes
 - Whenever starting a new session, verify that the FastAPI backend is running on port 8000 and the scheduler is active for the 30-minute periodic scans.
-- The professional logic was restored from a version previously located in `C:/Users/admin/Desktop/python_project/todolist`. Do not use the simplified 20MA-only versions.
+- Use the full professional indicator logic (TD / KD / MACD / RSI / 20MA + chip concentration). Do not regress to simplified 20MA-only versions.
