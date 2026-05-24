@@ -274,6 +274,47 @@ async def get_stocks():
         return []
     return cache_results
 
+TODOS_FILE = "todos.json"
+
+def _load_todos() -> List[Dict]:
+    if os.path.exists(TODOS_FILE):
+        try:
+            with open(TODOS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+def _save_todos(todos: List[Dict]):
+    with open(TODOS_FILE, "w", encoding="utf-8") as f:
+        json.dump(todos, f, ensure_ascii=False, indent=2)
+
+_todos: List[Dict] = _load_todos()
+_todos_lock = threading.Lock()
+
+class Todo(BaseModel):
+    id: int
+    task: str
+
+@app.get("/api/todos")
+async def get_todos():
+    return _todos
+
+@app.post("/api/todos")
+async def add_todo(todo: Todo):
+    with _todos_lock:
+        _todos.append(todo.dict())
+        _save_todos(_todos)
+    return {"status": "ok"}
+
+@app.delete("/api/todos/{todo_id}")
+async def delete_todo(todo_id: int):
+    global _todos
+    with _todos_lock:
+        _todos = [t for t in _todos if t["id"] != todo_id]
+        _save_todos(_todos)
+    return {"status": "ok"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=8000)
