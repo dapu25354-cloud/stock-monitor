@@ -68,7 +68,9 @@ def analyze(symbol):
     try:
         df = yf.download(symbol, period="60d", progress=False)
         if df.empty: return
-        
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+
         price = round(float(df['Close'].iloc[-1]), 2)
         f_val, t_val = get_chip_data(symbol)
         inst_total = f_val + t_val
