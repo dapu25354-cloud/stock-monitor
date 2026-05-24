@@ -50,16 +50,17 @@ def get_chip_data(symbol):
                             t = int(row[10].replace(',',''))
                             return f // 1000, t // 1000
             else:
+                # TPEx (new schema): tables[0].data; 10=外資合計買賣超, 13=投信買賣超
                 y = int(t_date[:4]) - 1911
                 d_fmt = f"{y}/{t_date[4:6]}/{t_date[6:]}"
                 url = f"https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=json&se=EW&t=D&d={d_fmt}"
                 resp = requests.get(url, timeout=5).json()
-                if resp.get('aaData'):
-                    for row in resp['aaData']:
-                        if row[0].strip() == code:
-                            f = int(row[8].replace(',',''))
-                            t = int(row[11].replace(',',''))
-                            return f // 1000, t // 1000
+                rows = (resp.get('tables') or [{}])[0].get('data') or []
+                for row in rows:
+                    if row[0].strip() == code:
+                        f = int(row[10].replace(',',''))
+                        t = int(row[13].replace(',',''))
+                        return f // 1000, t // 1000
         except: continue
     return 0, 0
 

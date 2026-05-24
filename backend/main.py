@@ -53,42 +53,78 @@ def get_stock_name(symbol: str):
     }
     return STOCK_NAMES.get(symbol, symbol.split('.')[0])
 
+_chip_cache: Dict[str, Dict[str, tuple]] = {}
+_chip_cache_lock = threading.Lock()
+_chip_session = requests.Session()
+_chip_session.headers.update({"User-Agent": "Mozilla/5.0"})
+
+def _fetch_twse_day(t_date: str) -> Dict[str, tuple]:
+    key = f"TW{t_date}"
+    if key in _chip_cache:
+        return _chip_cache[key]
+    with _chip_cache_lock:
+        if key in _chip_cache:
+            return _chip_cache[key]
+        result: Dict[str, tuple] = {}
+        try:
+            url = f"https://www.twse.com.tw/fund/T86?response=json&date={t_date}&selectType=ALL"
+            resp = _chip_session.get(url, timeout=15).json()
+            for row in resp.get('data', []):
+                code = row[0].strip()
+                f_net = (int(row[4].replace(',', '')) + int(row[7].replace(',', ''))) // 1000
+                t_net = int(row[10].replace(',', '')) // 1000
+                result[code] = (f_net, t_net)
+        except Exception as e:
+            print(f"[chip] TWSE {t_date} fetch failed: {e}")
+        _chip_cache[key] = result
+        return result
+
+def _fetch_tpex_day(t_date: str) -> Dict[str, tuple]:
+    key = f"OTC{t_date}"
+    if key in _chip_cache:
+        return _chip_cache[key]
+    with _chip_cache_lock:
+        if key in _chip_cache:
+            return _chip_cache[key]
+        result: Dict[str, tuple] = {}
+        try:
+            y = int(t_date[:4]) - 1911
+            d_fmt = f"{y}/{t_date[4:6]}/{t_date[6:]}"
+            url = f"https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=json&se=EW&t=D&d={d_fmt}"
+            resp = _chip_session.get(url, timeout=15).json()
+            rows = (resp.get('tables') or [{}])[0].get('data') or []
+            for row in rows:
+                code = row[0].strip()
+                f_net = int(row[10].replace(',', '')) // 1000
+                t_net = int(row[13].replace(',', '')) // 1000
+                result[code] = (f_net, t_net)
+        except Exception as e:
+            print(f"[chip] TPEx {t_date} fetch failed: {e}")
+        _chip_cache[key] = result
+        return result
+
+def _warm_chip_cache(days_back: int = 10):
+    with _chip_cache_lock:
+        _chip_cache.clear()
+    for d_offset in range(days_back):
+        t_date = (datetime.now() - timedelta(days=d_offset)).strftime('%Y%m%d')
+        _fetch_twse_day(t_date)
+        _fetch_tpex_day(t_date)
+
 def get_chip_data(symbol: str, days: int = 5):
     code = symbol.split('.')[0]
-    is_otc = '.TWO' in symbol.upper()
+    fetcher = _fetch_tpex_day if '.TWO' in symbol.upper() else _fetch_twse_day
     total_f, total_t = 0, 0
     found_days = 0
     for d_offset in range(10):
         if found_days >= days: break
         t_date = (datetime.now() - timedelta(days=d_offset)).strftime('%Y%m%d')
-        try:
-            if not is_otc:
-                # TWSE: 4=外資(不含自營), 7=外資自營, 10=投信
-                url = f"https://www.twse.com.tw/fund/T86?response=json&date={t_date}&selectType=ALL"
-                resp = requests.get(url, timeout=3).json()
-                if resp.get('data'):
-                    for row in resp['data']:
-                        if row[0].strip() == code:
-                            f_net = int(row[4].replace(',', '')) + int(row[7].replace(',', ''))
-                            t_net = int(row[10].replace(',', ''))
-                            total_f += f_net // 1000
-                            total_t += t_net // 1000
-                            found_days += 1; break
-            else:
-                # TPEx: 8=外資及陸資合計, 11=投信
-                y = int(t_date[:4]) - 1911
-                d_fmt = f"{y}/{t_date[4:6]}/{t_date[6:]}"
-                url = f"https://www.tpex.org.tw/web/stock/3insti/daily_trade/3itrade_hedge_result.php?l=zh-tw&o=json&se=EW&t=D&d={d_fmt}"
-                resp = requests.get(url, timeout=3).json()
-                if resp.get('aaData'):
-                    for row in resp['aaData']:
-                        if row[0].strip() == code:
-                            f_net = int(row[8].replace(',', ''))
-                            t_net = int(row[11].replace(',', ''))
-                            total_f += f_net // 1000
-                            total_t += t_net // 1000
-                            found_days += 1; break
-        except: continue
+        day_map = fetcher(t_date)
+        if code in day_map:
+            f, t = day_map[code]
+            total_f += f
+            total_t += t
+            found_days += 1
     return total_f, total_t
 
 def analyze_stock(symbol: str):
@@ -165,6 +201,7 @@ def update_all_stocks():
         '2618.TW', '9904.TW', '1527.TW', '2002.TW', '3211.TWO', '2395.TW'
     ]
     
+    _warm_chip_cache()
     new_results = []
     with ThreadPoolExecutor(max_workers=10) as executor:
         results = list(executor.map(analyze_stock, watchlist))
