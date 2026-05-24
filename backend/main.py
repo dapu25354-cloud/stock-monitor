@@ -215,7 +215,21 @@ def update_all_stocks():
 
 from apscheduler.triggers.cron import CronTrigger
 
-# ... (rest of imports)
+def check_and_notify(data: dict):
+    if data.get("signal_type") != "success":
+        return
+    msg = (
+        f"🚀 *【本地監控通知】*\n"
+        f"------------------\n"
+        f"💎 標的：{data['name']} ({data['symbol']})\n"
+        f"💰 價格：{data['price']}\n"
+        f"📊 訊號：*{data['signal']}*\n"
+        f"🔥 籌碼集中度：{data['chip_concent']}%\n"
+        f"🏢 {data['inst_signal']} (張)\n"
+        f"📈 {data['analysis']}\n"
+        f"⏰ 時間：{datetime.now().strftime('%H:%M:%S')}"
+    )
+    send_telegram_message(msg)
 
 def scheduled_scan():
     """定時掃描並通知 (支援手動觸發)"""
