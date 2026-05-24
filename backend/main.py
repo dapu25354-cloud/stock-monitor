@@ -58,6 +58,10 @@ _chip_cache_lock = threading.Lock()
 _chip_session = requests.Session()
 _chip_session.headers.update({"User-Agent": "Mozilla/5.0"})
 
+def _to_int(v) -> int:
+    # TWSE/TPEx mix strings ("1,234") with raw ints in the same response
+    return int(str(v).replace(',', '').strip() or 0)
+
 def _fetch_twse_day(t_date: str) -> Dict[str, tuple]:
     key = f"TW{t_date}"
     if key in _chip_cache:
@@ -70,10 +74,13 @@ def _fetch_twse_day(t_date: str) -> Dict[str, tuple]:
             url = f"https://www.twse.com.tw/fund/T86?response=json&date={t_date}&selectType=ALL"
             resp = _chip_session.get(url, timeout=15).json()
             for row in resp.get('data', []):
-                code = row[0].strip()
-                f_net = (int(row[4].replace(',', '')) + int(row[7].replace(',', ''))) // 1000
-                t_net = int(row[10].replace(',', '')) // 1000
-                result[code] = (f_net, t_net)
+                try:
+                    code = str(row[0]).strip()
+                    f_net = (_to_int(row[4]) + _to_int(row[7])) // 1000
+                    t_net = _to_int(row[10]) // 1000
+                    result[code] = (f_net, t_net)
+                except Exception:
+                    continue
         except Exception as e:
             print(f"[chip] TWSE {t_date} fetch failed: {e}")
         _chip_cache[key] = result
@@ -94,10 +101,13 @@ def _fetch_tpex_day(t_date: str) -> Dict[str, tuple]:
             resp = _chip_session.get(url, timeout=15).json()
             rows = (resp.get('tables') or [{}])[0].get('data') or []
             for row in rows:
-                code = row[0].strip()
-                f_net = int(row[10].replace(',', '')) // 1000
-                t_net = int(row[13].replace(',', '')) // 1000
-                result[code] = (f_net, t_net)
+                try:
+                    code = str(row[0]).strip()
+                    f_net = _to_int(row[10]) // 1000
+                    t_net = _to_int(row[13]) // 1000
+                    result[code] = (f_net, t_net)
+                except Exception:
+                    continue
         except Exception as e:
             print(f"[chip] TPEx {t_date} fetch failed: {e}")
         _chip_cache[key] = result

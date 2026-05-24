@@ -33,6 +33,9 @@ def send_telegram_message(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}, timeout=10)
 
+def _to_int(v):
+    return int(str(v).replace(',', '').strip() or 0)
+
 def get_chip_data(symbol):
     code = symbol.split('.')[0]
     is_otc = '.TWO' in symbol.upper()
@@ -45,9 +48,9 @@ def get_chip_data(symbol):
                 resp = requests.get(url, timeout=5).json()
                 if resp.get('data'):
                     for row in resp['data']:
-                        if row[0].strip() == code:
-                            f = int(row[4].replace(',','')) + int(row[7].replace(',',''))
-                            t = int(row[10].replace(',',''))
+                        if str(row[0]).strip() == code:
+                            f = _to_int(row[4]) + _to_int(row[7])
+                            t = _to_int(row[10])
                             return f // 1000, t // 1000
             else:
                 # TPEx (new schema): tables[0].data; 10=外資合計買賣超, 13=投信買賣超
@@ -57,9 +60,9 @@ def get_chip_data(symbol):
                 resp = requests.get(url, timeout=5).json()
                 rows = (resp.get('tables') or [{}])[0].get('data') or []
                 for row in rows:
-                    if row[0].strip() == code:
-                        f = int(row[10].replace(',',''))
-                        t = int(row[13].replace(',',''))
+                    if str(row[0]).strip() == code:
+                        f = _to_int(row[10])
+                        t = _to_int(row[13])
                         return f // 1000, t // 1000
         except: continue
     return 0, 0
