@@ -137,6 +137,16 @@ def get_chip_data(symbol: str, days: int = 5):
             found_days += 1
     return total_f, total_t
 
+def get_chip_latest_day(symbol: str):
+    code = symbol.split('.')[0]
+    fetcher = _fetch_tpex_day if '.TWO' in symbol.upper() else _fetch_twse_day
+    for d_offset in range(10):
+        t_date = (datetime.now() - timedelta(days=d_offset)).strftime('%Y%m%d')
+        day_map = fetcher(t_date)
+        if code in day_map:
+            return day_map[code]
+    return (0, 0)
+
 def analyze_stock(symbol: str):
     try:
         df = yf.download(symbol, period="60d", interval="1d", progress=False)
@@ -181,11 +191,16 @@ def analyze_stock(symbol: str):
         # Chip
         f_val, t_val = get_chip_data(symbol)
         inst_total = f_val + t_val
+        f_today, t_today = get_chip_latest_day(symbol)
+        today_total = f_today + t_today
         total_vol_5d = df['Volume'].tail(5).sum() / 1000
         chip_concent = round((inst_total / (total_vol_5d + 0.001)) * 100, 2)
 
         sig_list = []
-        if chip_concent > 8 and inst_total > 0: sig_list.append("💎 主力大買")
+        if chip_concent > 8 and inst_total > 0:
+            sig_list.append("💎 主力大買")
+            if today_total < 0:
+                sig_list.append("⚠️ 主力轉賣")
         if hist.iloc[-1] > 0 and hist.iloc[-2] <= 0: sig_list.append("MACD金叉")
         if k < 25: sig_list.append("KD低檔")
         if buy_c >= 8: sig_list.append("TD低點轉折")
@@ -197,6 +212,7 @@ def analyze_stock(symbol: str):
             "signal_type": "success" if sig_list else "normal",
             "td_signal": f"買計:{buy_c}" if buy_c > 0 else f"賣計:{sell_c}",
             "inst_signal": f"外資:{f_val} | 投信:{t_val}", "chip_concent": chip_concent,
+            "today_signal": f"外資:{f_today} | 投信:{t_today}",
             "analysis": f"KD:{round(k,1)} | 乖離:{bias}%"
         }
     except: return None

@@ -113,6 +113,16 @@ def get_chip_data(symbol, days=5):
             found += 1
     return total_f, total_t
 
+def get_chip_latest_day(symbol):
+    code = symbol.split('.')[0]
+    fetcher = _fetch_tpex_day if '.TWO' in symbol.upper() else _fetch_twse_day
+    for d_offset in range(1, 11):
+        t_date = (datetime.now() - timedelta(days=d_offset)).strftime('%Y%m%d')
+        day = fetcher(t_date)
+        if code in day:
+            return day[code]
+    return (0, 0)
+
 def analyze(symbol):
     """每檔分析一次，觸發訊號就立刻發 Telegram，並回傳 dict 給最後的 summary 用。"""
     try:
@@ -124,6 +134,8 @@ def analyze(symbol):
         price = round(float(df['Close'].iloc[-1]), 2)
         f_val, t_val = get_chip_data(symbol)
         inst_total = f_val + t_val
+        f_today, t_today = get_chip_latest_day(symbol)
+        today_total = f_today + t_today
         total_vol_5d = float(df['Volume'].tail(5).sum()) / 1000
         chip_concent = round((inst_total / (total_vol_5d + 0.001)) * 100, 2)
 
@@ -138,6 +150,8 @@ def analyze(symbol):
         sig_list = []
         if chip_concent > CHIP_THRESHOLD and inst_total > 0:
             sig_list.append("💎 主力大買")
+            if today_total < 0:
+                sig_list.append("⚠️ 主力轉賣")
         if macd_cross:
             sig_list.append("MACD金叉")
 
@@ -149,7 +163,8 @@ def analyze(symbol):
                 f"💰 價格：{price}\n"
                 f"📊 訊號：*{' | '.join(sig_list)}*\n"
                 f"🔥 籌碼集中度(5日)：{chip_concent}%\n"
-                f"🏢 外資:{f_val} | 投信:{t_val} (張)\n"
+                f"🏢 5日 外資:{f_val} | 投信:{t_val}\n"
+                f"📅 最近一日 外資:{f_today} | 投信:{t_today}\n"
                 f"⏰ 時間：{datetime.now().strftime('%H:%M:%S')}"
             )
             send_telegram_message(msg)

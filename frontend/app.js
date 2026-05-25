@@ -33,7 +33,8 @@ async function fetchStocks() {
                 </div>
                 
                 <div class="chip-text">
-                    ${s.inst_signal} | 集中度: <span class="highlight">${s.chip_concent}%</span>
+                    5日 ${s.inst_signal} | 集中度: <span class="highlight">${s.chip_concent}%</span>
+                    ${s.today_signal ? `<br/>最近一日 ${s.today_signal}` : ''}
                 </div>
                 <div class="advice" style="color:#f0f6fc; margin-top:5px; font-weight:bold;">
                     分析: ${s.analysis}
