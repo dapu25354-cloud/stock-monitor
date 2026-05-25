@@ -201,6 +201,8 @@ def analyze_stock(symbol: str):
             sig_list.append("💎 主力大買")
             if today_total < 0:
                 sig_list.append("⚠️ 主力轉賣")
+        elif chip_concent < -8 and inst_total < 0 and today_total > 0:
+            sig_list.append("💪 法人轉買")
         if hist.iloc[-1] > 0 and hist.iloc[-2] <= 0: sig_list.append("MACD金叉")
         if k < 25: sig_list.append("KD低檔")
         if buy_c >= 8: sig_list.append("TD低點轉折")
