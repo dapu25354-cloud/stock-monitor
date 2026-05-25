@@ -189,6 +189,10 @@ def analyze(symbol):
                 sig_list.append("⚠️ 主力轉賣")
         elif chip_concent < -CHIP_THRESHOLD and inst_total < 0 and today_total > 0:
             sig_list.append("💪 法人轉買")
+        if today_total >= 5000:
+            sig_list.append("📈 法人單日大買")
+        elif today_total <= -5000:
+            sig_list.append("📉 法人單日大賣")
         if macd_cross:
             sig_list.append("MACD金叉")
 
