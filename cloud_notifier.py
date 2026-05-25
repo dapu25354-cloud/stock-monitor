@@ -2,9 +2,14 @@ import requests
 import yfinance as yf
 import pandas as pd
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
+
+TW_TZ = timezone(timedelta(hours=8))
+
+def now_tw():
+    return datetime.now(TW_TZ)
 
 # 從 GitHub Secrets 讀取 (安全性考量)
 TELEGRAM_TOKEN = os.getenv("TG_TOKEN")
@@ -92,7 +97,7 @@ def _fetch_tpex_day(t_date: str) -> Dict[str, tuple]:
 def warm_chip_cache(days_back=10):
     # GitHub Actions 跑時通常是清晨，今日資料還沒出，所以從 d_offset=1 開始
     for d_offset in range(1, days_back + 1):
-        t_date = (datetime.now() - timedelta(days=d_offset)).strftime('%Y%m%d')
+        t_date = (now_tw() - timedelta(days=d_offset)).strftime('%Y%m%d')
         _fetch_twse_day(t_date)
         _fetch_tpex_day(t_date)
 
@@ -126,7 +131,7 @@ def get_chip_data(symbol, days=5):
     found = 0
     for d_offset in range(1, 11):
         if found >= days: break
-        t_date = (datetime.now() - timedelta(days=d_offset)).strftime('%Y%m%d')
+        t_date = (now_tw() - timedelta(days=d_offset)).strftime('%Y%m%d')
         day = fetcher(t_date)
         if code in day:
             f, t = day[code]
@@ -139,7 +144,7 @@ def get_chip_latest_day(symbol):
     code = symbol.split('.')[0]
     fetcher = _fetch_tpex_day if '.TWO' in symbol.upper() else _fetch_twse_day
     for d_offset in range(1, 11):
-        t_date = (datetime.now() - timedelta(days=d_offset)).strftime('%Y%m%d')
+        t_date = (now_tw() - timedelta(days=d_offset)).strftime('%Y%m%d')
         day = fetcher(t_date)
         if code in day:
             return day[code]
@@ -193,7 +198,7 @@ def analyze(symbol):
                 f"🔥 籌碼集中度(5日)：{chip_concent}%\n"
                 f"🏢 5日 外資:{f_val} | 投信:{t_val}\n"
                 f"📅 最近一日 外資:{f_today} | 投信:{t_today}\n"
-                f"⏰ 時間：{datetime.now().strftime('%H:%M:%S')}"
+                f"⏰ 時間：{now_tw().strftime('%H:%M:%S')} (TW)"
             )
             send_telegram_message(msg)
 
@@ -224,7 +229,7 @@ def send_summary(results):
         top_lines.append(f"  {r['symbol']} {r['name']}: {sign}{r['chip_concent']}%{tag}")
 
     msg = (
-        f"📡 *掃描完成* {datetime.now().strftime('%m/%d %H:%M')}\n"
+        f"📡 *掃描完成* {now_tw().strftime('%m/%d %H:%M')} (TW)\n"
         f"------------------\n"
         f"✅ 已掃描 {len(valid)}/{len(watchlist)} 檔\n"
         f"🚨 觸發訊號：{len(triggered)} 檔\n\n"
