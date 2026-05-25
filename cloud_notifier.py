@@ -96,6 +96,28 @@ def warm_chip_cache(days_back=10):
         _fetch_twse_day(t_date)
         _fetch_tpex_day(t_date)
 
+# 警示股（注意/處置股）— 法人交易被機械限制，籌碼集中度會被低估
+_warning_stocks: set = set()
+EXTRA_WARNING_STOCKS: set = set()  # 手動補充用
+
+def fetch_warning_stocks():
+    global _warning_stocks
+    found = set()
+    try:
+        url = "https://www.twse.com.tw/announcement/punish?response=json"
+        resp = requests.get(url, timeout=10).json()
+        for row in resp.get('data', []):
+            if len(row) > 2:
+                code = str(row[2]).strip()
+                if code: found.add(code)
+    except Exception as e:
+        print(f"[warning] TWSE 處置股 fetch failed: {e}")
+    _warning_stocks = found
+
+def is_warning_stock(symbol):
+    code = symbol.split('.')[0]
+    return code in _warning_stocks or symbol in EXTRA_WARNING_STOCKS
+
 def get_chip_data(symbol, days=5):
     """5 日累計三大法人買賣超（張）。與 backend/main.py 一致。"""
     code = symbol.split('.')[0]
@@ -157,10 +179,14 @@ def analyze(symbol):
         if macd_cross:
             sig_list.append("MACD金叉")
 
+        warning = is_warning_stock(symbol)
+        warning_tag = "⚠️ 警示股（籌碼信號可能失真）\n" if warning else ""
+
         if sig_list:
             msg = (
                 f"🚀 *【GitHub 自動監控通知】*\n"
                 f"------------------\n"
+                f"{warning_tag}"
                 f"💎 標的：{get_stock_name(symbol)} ({symbol})\n"
                 f"💰 價格：{price}\n"
                 f"📊 訊號：*{' | '.join(sig_list)}*\n"
@@ -179,6 +205,7 @@ def analyze(symbol):
             "f_val": f_val,
             "t_val": t_val,
             "signals": sig_list,
+            "is_warning": warning,
         }
     except Exception as e:
         print(f"Error analyzing {symbol}: {e}")
@@ -209,6 +236,7 @@ def send_summary(results):
 if __name__ == "__main__":
     print(f"Starting cloud scan at {datetime.now()}")
     warm_chip_cache()
+    fetch_warning_stocks()
     with ThreadPoolExecutor(max_workers=10) as executor:
         results = list(executor.map(analyze, watchlist))
     send_summary(results)

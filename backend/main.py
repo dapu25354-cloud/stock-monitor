@@ -121,6 +121,29 @@ def _warm_chip_cache(days_back: int = 10):
         _fetch_twse_day(t_date)
         _fetch_tpex_day(t_date)
 
+# 警示股（注意/處置股）— 法人交易被機械限制，籌碼集中度會被低估
+# Auto-fetched from TWSE on each scan. Add OTC or known-warning codes here too.
+_warning_stocks: set = set()
+EXTRA_WARNING_STOCKS: set = set()  # 手動補充用（例如 TPEx 警示股）
+
+def _fetch_warning_stocks():
+    global _warning_stocks
+    found = set()
+    try:
+        url = "https://www.twse.com.tw/announcement/punish?response=json"
+        resp = _chip_session.get(url, timeout=10).json()
+        for row in resp.get('data', []):
+            if len(row) > 2:
+                code = str(row[2]).strip()
+                if code: found.add(code)
+    except Exception as e:
+        print(f"[warning] TWSE 處置股 fetch failed: {e}")
+    _warning_stocks = found
+
+def is_warning_stock(symbol: str) -> bool:
+    code = symbol.split('.')[0]
+    return code in _warning_stocks or symbol in EXTRA_WARNING_STOCKS
+
 def get_chip_data(symbol: str, days: int = 5):
     code = symbol.split('.')[0]
     fetcher = _fetch_tpex_day if '.TWO' in symbol.upper() else _fetch_twse_day
@@ -207,15 +230,17 @@ def analyze_stock(symbol: str):
         if k < 25: sig_list.append("KD低檔")
         if buy_c >= 8: sig_list.append("TD低點轉折")
 
+        warning = is_warning_stock(symbol)
         return {
             "symbol": symbol, "name": get_stock_name(symbol), "price": round(price, 2),
             "ma20": round(ma20, 2), "rsi": round(rsi, 1), "bias": bias,
-            "signal": " | ".join(sig_list) if sig_list else "穩定盤整", 
+            "signal": " | ".join(sig_list) if sig_list else "穩定盤整",
             "signal_type": "success" if sig_list else "normal",
             "td_signal": f"買計:{buy_c}" if buy_c > 0 else f"賣計:{sell_c}",
             "inst_signal": f"外資:{f_val} | 投信:{t_val}", "chip_concent": chip_concent,
             "today_signal": f"外資:{f_today} | 投信:{t_today}",
-            "analysis": f"KD:{round(k,1)} | 乖離:{bias}%"
+            "analysis": f"KD:{round(k,1)} | 乖離:{bias}%",
+            "is_warning": warning
         }
     except: return None
 
@@ -230,6 +255,7 @@ def update_all_stocks():
     ]
     
     _warm_chip_cache()
+    _fetch_warning_stocks()
     new_results = []
     with ThreadPoolExecutor(max_workers=10) as executor:
         results = list(executor.map(analyze_stock, watchlist))
