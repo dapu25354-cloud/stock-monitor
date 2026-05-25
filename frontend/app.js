@@ -16,7 +16,7 @@ async function fetchStocks() {
                 <div class="signal-badge ${s.signal_type === 'success' ? 'success-bg' : 'normal-bg'}">
                     ${s.signal}
                 </div>
-                <h3>${s.name} <small style="color:#8b949e">${s.symbol}</small>${s.is_warning ? ' <span style="background:#f0883e;color:#000;padding:1px 6px;border-radius:8px;font-size:0.65rem;margin-left:4px;">⚠️ 警示</span>' : ''}</h3>
+                <h3>${s.name} <small style="color:#8b949e">${s.symbol}</small>${s.is_warning ? ' <span style="background:#f0883e;color:#000;padding:1px 6px;border-radius:8px;font-size:0.65rem;margin-left:4px;">⚠️ 警示</span>' : ''}${s.is_state_owned ? ' <span style="background:#1f6feb;color:#fff;padding:1px 6px;border-radius:8px;font-size:0.65rem;margin-left:4px;">🏛️ 官股</span>' : ''}</h3>
                 <div class="price">${s.price}</div>
                 
                 <div class="metric-row">

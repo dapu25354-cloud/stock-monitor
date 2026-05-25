@@ -105,6 +105,14 @@ def warm_chip_cache(days_back=10):
 _warning_stocks: set = set()
 EXTRA_WARNING_STOCKS: set = set()  # 手動補充用
 
+# 國營/官股護盤股 — 官股買盤不在外資/投信籌碼裡，會低估真實買盤
+STATE_OWNED_STOCKS: set = {
+    '2002.TW',  # 中鋼
+}
+
+def is_state_owned(symbol):
+    return symbol in STATE_OWNED_STOCKS
+
 def fetch_warning_stocks():
     global _warning_stocks
     found = set()
@@ -185,13 +193,16 @@ def analyze(symbol):
             sig_list.append("MACD金叉")
 
         warning = is_warning_stock(symbol)
+        state = is_state_owned(symbol)
         warning_tag = "⚠️ 警示股（籌碼信號可能失真）\n" if warning else ""
+        state_tag = "🏛️ 官股護盤股（外資/投信籌碼會低估真實買盤）\n" if state else ""
 
         if sig_list:
             msg = (
                 f"🚀 *【GitHub 自動監控通知】*\n"
                 f"------------------\n"
                 f"{warning_tag}"
+                f"{state_tag}"
                 f"💎 標的：{get_stock_name(symbol)} ({symbol})\n"
                 f"💰 價格：{price}\n"
                 f"📊 訊號：*{' | '.join(sig_list)}*\n"
@@ -211,6 +222,7 @@ def analyze(symbol):
             "t_val": t_val,
             "signals": sig_list,
             "is_warning": warning,
+            "is_state_owned": state,
         }
     except Exception as e:
         print(f"Error analyzing {symbol}: {e}")

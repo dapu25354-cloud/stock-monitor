@@ -126,6 +126,18 @@ def _warm_chip_cache(days_back: int = 10):
 _warning_stocks: set = set()
 EXTRA_WARNING_STOCKS: set = set()  # 手動補充用（例如 TPEx 警示股）
 
+# 國營/官股護盤股 — 官股（國發基金、勞退、退撫等）持續買盤不在外資/投信籌碼裡，
+# 系統會系統性低估真實買盤。標籤用於提醒判讀打折扣。
+STATE_OWNED_STOCKS: set = {
+    '2002.TW',  # 中鋼
+    # 可選加入: '2880.TW' 華南金, '2886.TW' 兆豐金, '2892.TW' 第一金,
+    # '5880.TW' 合庫金, '2801.TW' 彰銀, '2834.TW' 台企銀,
+    # '1722.TW' 台肥, '2412.TW' 中華電
+}
+
+def is_state_owned(symbol: str) -> bool:
+    return symbol in STATE_OWNED_STOCKS
+
 def _fetch_warning_stocks():
     global _warning_stocks
     found = set()
@@ -231,6 +243,7 @@ def analyze_stock(symbol: str):
         if buy_c >= 8: sig_list.append("TD低點轉折")
 
         warning = is_warning_stock(symbol)
+        state = is_state_owned(symbol)
         return {
             "symbol": symbol, "name": get_stock_name(symbol), "price": round(price, 2),
             "ma20": round(ma20, 2), "rsi": round(rsi, 1), "bias": bias,
@@ -240,7 +253,8 @@ def analyze_stock(symbol: str):
             "inst_signal": f"外資:{f_val} | 投信:{t_val}", "chip_concent": chip_concent,
             "today_signal": f"外資:{f_today} | 投信:{t_today}",
             "analysis": f"KD:{round(k,1)} | 乖離:{bias}%",
-            "is_warning": warning
+            "is_warning": warning,
+            "is_state_owned": state
         }
     except: return None
 
