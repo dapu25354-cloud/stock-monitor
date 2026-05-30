@@ -3,13 +3,17 @@ name: Stock Monitor Cloud
 on:
   schedule:
     # GitHub Actions 使用 UTC 時間（台灣時間 = UTC + 8）
-    # 台灣 10:00 -> UTC 02:00
-    # 台灣 12:00 -> UTC 04:00
-    # 台灣 14:30 -> UTC 06:30
-    - cron: '0 2 * * 1-5'
-    - cron: '0 4 * * 1-5'
-    - cron: '30 6 * * 1-5'
+    # 盤中籌碼掃描：台灣 10:00 / 12:00 / 14:30
+    - cron: '0 2 * * 1-5'    # 台灣 10:00 -> UTC 02:00
+    - cron: '0 4 * * 1-5'    # 台灣 12:00 -> UTC 04:00
+    - cron: '30 6 * * 1-5'   # 台灣 14:30 -> UTC 06:30
+    # 收盤重點報告（過熱/弱勢/核心 + 支撐壓力）：台灣 20:00
+    - cron: '0 12 * * 1-5'   # 台灣 20:00 -> UTC 12:00
   workflow_dispatch:
+    inputs:
+      mode:
+        description: '執行模式：intraday（盤中籌碼）或 evening（收盤重點）'
+        default: 'intraday'
   push:
     branches: [main]
     paths: ['.github/workflows/stock_monitor.yml']
@@ -49,4 +53,12 @@ jobs:
         env:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: python cloud_notifier.py
+        run: |
+          # 台灣 20:00（UTC 12:00）這條 cron，或手動選 evening → 跑收盤重點報告
+          if [ "${{ github.event.schedule }}" = "0 12 * * 1-5" ] || [ "${{ github.event.inputs.mode }}" = "evening" ]; then
+            echo "Mode: evening report"
+            python cloud_notifier.py evening
+          else
+            echo "Mode: intraday chip scan"
+            python cloud_notifier.py
+          fi

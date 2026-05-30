@@ -2,9 +2,16 @@ import requests
 import yfinance as yf
 import pandas as pd
 import os
+import sys
 from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 from typing import Dict
+
+# Windows 終端機（cp950）印 emoji 會報錯；雲端 ubuntu 為 utf-8 不受影響
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 
 TW_TZ = timezone(timedelta(hours=8))
 
@@ -254,11 +261,130 @@ def send_summary(results):
     )
     send_telegram_message(msg)
 
+# ============================================================
+#  晚間收盤重點報告（過熱 / 弱勢 / 核心 + 支撐壓力 + 乖離）
+#  與本機 daily_stock_scanner.py 同邏輯，給 Telegram 用
+# ============================================================
+CORE_STOCKS = ['2330.TW', '6669.TW', '2308.TW']  # 三大核心：台積電/緯穎/台達電
+
+
+def _calc_rsi(close, window=14):
+    delta = close.diff()
+    gain = delta.where(delta > 0, 0).fillna(0)
+    loss = (-delta.where(delta < 0, 0)).fillna(0)
+    ag = gain.ewm(alpha=1/window, min_periods=window, adjust=False).mean()
+    al = loss.ewm(alpha=1/window, min_periods=window, adjust=False).mean()
+    return 100 - (100 / (1 + ag / al))
+
+
+def _ma(close, n):
+    if len(close) < n:
+        return None
+    return float(close.rolling(n).mean().iloc[-1])
+
+
+def _nearest_levels(price, candidates):
+    """挑出最近的壓力/支撐（各最多 2 檔），合併相同價位標籤。"""
+    merged = {}
+    for label, val in candidates:
+        if val is None:
+            continue
+        merged.setdefault(round(val, 1), []).append(label)
+    above = sorted(k for k in merged if k > price)
+    below = sorted((k for k in merged if k < price), reverse=True)
+    res = [(v, '/'.join(merged[v])) for v in above[:2]]
+    sup = [(v, '/'.join(merged[v])) for v in below[:2]]
+    return res, sup
+
+
+def analyze_levels(symbol):
+    """抓 1 年資料，算現價/RSI/均線/季線乖離/支撐壓力。"""
+    try:
+        # 用 Ticker.history 循序抓：yf.download 在多執行緒下會互相污染資料
+        df = yf.Ticker(symbol).history(period="1y")
+        if df.empty or len(df) < 40:
+            return None
+        close, high, low = df['Close'], df['High'], df['Low']
+        price = round(float(close.iloc[-1]), 2)
+        rsi = round(float(_calc_rsi(close).iloc[-1]), 1)
+        ma5, ma20, ma60, ma120 = _ma(close, 5), _ma(close, 20), _ma(close, 60), _ma(close, 120)
+        hi_1m, lo_1m = float(high.iloc[-20:].max()), float(low.iloc[-20:].min())
+        hi_3m, lo_3m = float(high.iloc[-60:].max()), float(low.iloc[-60:].min())
+        hi_52w = float(high.max())
+        cands = [
+            ('5日', ma5), ('月', ma20), ('季', ma60), ('半年', ma120),
+            ('近月高', hi_1m), ('近月低', lo_1m), ('近季高', hi_3m), ('近季低', lo_3m),
+            ('52週高', hi_52w),
+        ]
+        res, sup = _nearest_levels(price, cands)
+        bias60 = round((price - ma60) / ma60 * 100, 1) if ma60 else None
+        return {
+            'symbol': symbol, 'name': get_stock_name(symbol), 'price': price,
+            'rsi': rsi, 'bias60': bias60, 'ma60': ma60, 'res': res, 'sup': sup,
+        }
+    except Exception as e:
+        print(f"Error analyzing levels {symbol}: {e}")
+        return None
+
+
+def _bias_txt(r):
+    return f"{r['bias60']:+}%" if r['bias60'] is not None else "N/A"
+
+
+def _fmt_levels(lst):
+    return "  ".join(f"{v:.1f}({l})" for v, l in lst) if lst else "—"
+
+
+def send_evening_report():
+    """每晚收盤後發一則『過熱/弱勢/核心』重點到 Telegram。"""
+    print(f"Evening report start {now_tw()}")
+    # 循序抓，避免 yfinance 多執行緒污染資料
+    data = [r for r in (analyze_levels(s) for s in watchlist) if r]
+
+    def is_hot(r):
+        return r['rsi'] > 70 or (r['bias60'] is not None and r['bias60'] > 30)
+
+    def is_weak(r):
+        return r['rsi'] < 40 or (r['ma60'] is not None and r['price'] < r['ma60'])
+
+    hot = sorted([r for r in data if is_hot(r)], key=lambda r: (r['bias60'] or 0), reverse=True)
+    weak = sorted([r for r in data if is_weak(r)], key=lambda r: r['rsi'])
+    core = sorted([r for r in data if r['symbol'] in CORE_STOCKS],
+                  key=lambda r: CORE_STOCKS.index(r['symbol']))
+
+    lines = [
+        f"🌙 *台股收盤重點* {now_tw().strftime('%m/%d')} (TW)",
+        "------------------",
+        f"✅ 掃描 {len(data)}/{len(watchlist)} 檔",
+        "",
+        "🔴 *過熱（追高小心）*",
+    ]
+    lines += [f"・{r['name']} {r['price']}｜RSI {r['rsi']}｜季線乖離 {_bias_txt(r)}" for r in hot] or ["・無"]
+
+    lines += ["", "🟢 *弱勢 / 已修正*"]
+    lines += [f"・{r['name']} {r['price']}｜RSI {r['rsi']}｜季線乖離 {_bias_txt(r)}" for r in weak] or ["・無"]
+
+    lines += ["", "🟡 *三大核心*"]
+    for r in core:
+        lines.append(f"・{r['name']} {r['price']}｜RSI {r['rsi']}｜乖離 {_bias_txt(r)}")
+        lines.append(f"   壓力 {_fmt_levels(r['res'])}")
+        lines.append(f"   支撐 {_fmt_levels(r['sup'])}")
+
+    msg = "\n".join(lines)
+    print(msg)
+    send_telegram_message(msg)
+
+
 if __name__ == "__main__":
-    print(f"Starting cloud scan at {datetime.now()}")
-    warm_chip_cache()
-    fetch_warning_stocks()
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        results = list(executor.map(analyze, watchlist))
-    send_summary(results)
-    print("Scan completed.")
+    # mode: 'evening' = 收盤重點報告；其他 = 原本的盤中籌碼掃描
+    mode = sys.argv[1] if len(sys.argv) > 1 else os.getenv("RUN_MODE", "intraday")
+    if mode == "evening":
+        send_evening_report()
+    else:
+        print(f"Starting cloud scan at {datetime.now()}")
+        warm_chip_cache()
+        fetch_warning_stocks()
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            results = list(executor.map(analyze, watchlist))
+        send_summary(results)
+        print("Scan completed.")
