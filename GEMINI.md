@@ -2,7 +2,7 @@
 
 ## Core Requirements
 - **Watchlist**: Always monitor the specific 21 Taiwan stocks: 
-    6561.TWO 是方, 7703.TWO 銳澤, 4551.TW 智伸科, 6640.TW 均華, 3231.TW 緯創, 5347.TWO 世界, 
+    6561.TWO 是方, 7703.TWO 銳澤, 4551.TW 智伸科, 6640.TWO 均華, 3231.TW 緯創, 5347.TWO 世界, 
     6669.TW 緯穎, 2330.TW 台積電, 9907.TW 統一實, 2891.TW 中信金, 2889.TW 國票金, 3362.TWO 先進光, 
     3008.TW 大立光, 2308.TW 台達電, 2885.TW 元大金, 2618.TW 長榮航, 9904.TW 寶成, 1527.TW 鑽全, 
     2002.TW 中鋼, 3211.TWO 順達, 2395.TW 研華.
