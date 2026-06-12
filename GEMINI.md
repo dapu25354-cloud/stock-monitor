@@ -18,6 +18,18 @@
 - **Backend**: `backend/main.py` contains the core indicator and notification logic.
 - **Frontend**: `frontend/index.html` and `app.js` provide the real-time monitoring dashboard.
 
+## Cloud Execution (GitHub Actions)
+- **Workflow**: `.github/workflows/stock_monitor.yml` handles automated scans.
+- **Schedules (Taiwan Time)**:
+    - **09:30 & 12:30**: Runs `cold_blooded_hunter.py` and `panic_bottom_hunter.py` (Intraday Mode).
+    - **20:00**: Runs `cloud_notifier.py` (Evening Closing Report).
+- **Secrets**: Requires `TG_TOKEN` and `TG_CHAT_ID` to be set in GitHub Repository Secrets.
+
+## Migrated Hunter Scripts (Cloud-Ready)
+- **`cold_blooded_hunter.py`**: Refactored for cloud use. Supports environment variables and relative paths.
+- **`panic_bottom_hunter.py`**: Refactored for cloud use. Detects extreme oversold/panic conditions.
+- **Requirements**: Requires `ta` library for technical indicators.
+
 ## Maintenance Notes
-- Whenever starting a new session, verify that the FastAPI backend is running on port 8000 and the scheduler is active for the 30-minute periodic scans.
+- **Local vs Cloud**: Local scripts in `python/` are for manual/GUI use. Scripts in `python/TODOLIST/` are synchronized with GitHub for 24/7 cloud monitoring.
 - Use the full professional indicator logic (TD / KD / MACD / RSI / 20MA + chip concentration). Do not regress to simplified 20MA-only versions.

@@ -18,9 +18,22 @@ TW_TZ = timezone(timedelta(hours=8))
 def now_tw():
     return datetime.now(TW_TZ)
 
-# 從 GitHub Secrets 讀取 (安全性考量)
+# 從 GitHub Secrets 讀取 (安全性考量) 或從本機 config.json 讀取
 TELEGRAM_TOKEN = os.getenv("TG_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TG_CHAT_ID")
+
+if not TELEGRAM_TOKEN:
+    # 嘗試讀取本機 config.json
+    try:
+        import json
+        config_path = os.path.join(os.path.dirname(__file__), "..", "config.json")
+        if os.path.exists(config_path):
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                TELEGRAM_TOKEN = config.get("tg_token") or config.get("token")
+                TELEGRAM_CHAT_ID = config.get("tg_chat_id") or config.get("chat_id")
+    except Exception:
+        pass
 
 # 主力大買訊號門檻：5 日累計籌碼集中度 > 8% 且 三大法人總和 > 0
 CHIP_THRESHOLD = 8
@@ -29,7 +42,8 @@ watchlist = [
     '6561.TWO', '7703.TWO', '4551.TW', '6640.TWO', '3231.TW',
     '5347.TWO', '6669.TW', '2330.TW', '9907.TW', '2891.TW',
     '2889.TW', '3362.TWO', '3008.TW', '2308.TW', '2885.TW',
-    '2618.TW', '9904.TW', '1527.TW', '2002.TW', '3211.TWO', '2395.TW'
+    '2618.TW', '9904.TW', '1527.TW', '2002.TW', '3211.TWO', 
+    '2395.TW', '3551.TWO'
 ]
 
 STOCK_NAMES = {
@@ -38,7 +52,7 @@ STOCK_NAMES = {
     '9907.TW': '統一實', '2891.TW': '中信金', '2889.TW': '國票金', '3362.TWO': '先進光',
     '3008.TW': '大立光', '2308.TW': '台達電', '2885.TW': '元大金', '2618.TW': '長榮航',
     '9904.TW': '寶成', '1527.TW': '鑽全', '2002.TW': '中鋼', '3211.TWO': '順達',
-    '2395.TW': '研華'
+    '2395.TW': '研華', '3551.TWO': '世禾'
 }
 
 def get_stock_name(symbol):
@@ -166,24 +180,37 @@ def get_chip_latest_day(symbol):
     return (0, 0)
 
 def analyze(symbol):
-    """每檔分析一次，觸發訊號就立刻發 Telegram，並回傳 dict 給最後的 summary 用。"""
+    """每檔 analysis 一次，觸發訊號就立刻發 Telegram，並回傳 dict 給最後的 summary 用。"""
+    print(f"正在分析 {symbol}...", end="\r")
     try:
         df = yf.download(symbol, period="60d", progress=False)
         if df.empty: return None
+        
+        # 處理 yfinance 可能返回的 MultiIndex (Ticker, Metric)
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
+        
+        # 確保 Close 是 Series 而不是單列 DataFrame，避免 iloc[-1] 返回 Series 而不是 scalar
+        close_series = df['Close'].squeeze()
+        if isinstance(close_series, pd.DataFrame):
+            close_series = close_series.iloc[:, 0]
 
-        price = round(float(df['Close'].iloc[-1]), 2)
+        price = round(float(close_series.iloc[-1]), 2)
         f_val, t_val = get_chip_data(symbol)
         inst_total = f_val + t_val
         f_today, t_today = get_chip_latest_day(symbol)
         today_total = f_today + t_today
-        total_vol_5d = float(df['Volume'].tail(5).sum()) / 1000
+        
+        volume_series = df['Volume'].squeeze()
+        if isinstance(volume_series, pd.DataFrame):
+            volume_series = volume_series.iloc[:, 0]
+            
+        total_vol_5d = float(volume_series.tail(5).sum()) / 1000
         chip_concent = round((inst_total / (total_vol_5d + 0.001)) * 100, 2)
 
         # MACD
-        exp1 = df['Close'].ewm(span=12, adjust=False).mean()
-        exp2 = df['Close'].ewm(span=26, adjust=False).mean()
+        exp1 = close_series.ewm(span=12, adjust=False).mean()
+        exp2 = close_series.ewm(span=26, adjust=False).mean()
         dif = exp1 - exp2
         dea = dif.ewm(span=9, adjust=False).mean()
         hist = (dif - dea) * 2

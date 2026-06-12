@@ -3,13 +3,17 @@ name: Stock Monitor Cloud
 on:
   schedule:
     # GitHub Actions 使用 UTC 時間（台灣時間 = UTC + 8）
-    # 收盤重點報告（過熱/弱勢/核心 + 支撐壓力）：台灣 20:00
-    - cron: '0 12 * * 1-5'   # 台灣 20:00 -> UTC 12:00
+    # 盤中掃描 1: 台灣 09:30 (UTC 01:30)
+    - cron: '30 1 * * 1-5'
+    # 盤中掃描 2: 台灣 12:30 (UTC 04:30)
+    - cron: '30 4 * * 1-5'
+    # 收盤重點報告：台灣 20:00 (UTC 12:00)
+    - cron: '0 12 * * 1-5'
   workflow_dispatch:
     inputs:
       mode:
-        description: '執行模式：evening（收盤重點，預設）或 intraday（盤中籌碼，已不排程）'
-        default: 'evening'
+        description: '執行模式：evening（收盤重點）或 intraday（獵殺與籌碼掃描）'
+        default: 'intraday'
   push:
     branches: [main]
     paths: ['.github/workflows/stock_monitor.yml']
@@ -50,11 +54,24 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
-          # 預設一律跑收盤重點報告（evening）；只有手動明確選 intraday 才跑盤中籌碼掃描
-          if [ "${{ github.event.inputs.mode }}" = "intraday" ]; then
-            echo "Mode: intraday chip scan"
+          # 判斷目前時間決定模式 (如果不是手動觸發)
+          HOUR=$(date +%H)
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "$HOUR" -eq "12" ]; then
+              RUN_MODE="evening"
+            else
+              RUN_MODE="intraday"
+            fi
+          else
+            RUN_MODE="${{ github.event.inputs.mode }}"
+          fi
+
+          if [ "$RUN_MODE" = "intraday" ]; then
+            echo "Mode: Intraday Hunter & Chip Scan"
+            python cold_blooded_hunter.py
+            python panic_bottom_hunter.py
             python cloud_notifier.py
           else
-            echo "Mode: evening report"
+            echo "Mode: Evening Closing Report"
             python cloud_notifier.py evening
           fi
