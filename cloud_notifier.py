@@ -40,19 +40,17 @@ CHIP_THRESHOLD = 8
 
 watchlist = [
     '6561.TWO', '7703.TWO', '4551.TW', '6640.TWO', '3231.TW',
-    '5347.TWO', '6669.TW', '2330.TW', '9907.TW', '2891.TW',
-    '2889.TW', '3362.TWO', '3008.TW', '2308.TW', '2885.TW',
-    '2618.TW', '9904.TW', '1527.TW', '2002.TW', '3211.TWO', 
-    '2395.TW', '3551.TWO', '8067.TWO'
+    '5347.TWO', '6669.TW', '2330.TW', '2891.TW',
+    '2889.TW', '3008.TW', '2308.TW', '2885.TW',
+    '2618.TW', '3211.TWO', '2395.TW', '3551.TWO', '8067.TWO'
 ]
 
 STOCK_NAMES = {
     '6561.TWO': '是方', '7703.TWO': '銳澤', '4551.TW': '智伸科', '6640.TWO': '均華',
     '3231.TW': '緯創', '5347.TWO': '世界', '6669.TW': '緯穎', '2330.TW': '台積電',
-    '9907.TW': '統一實', '2891.TW': '中信金', '2889.TW': '國票金', '3362.TWO': '先進光',
+    '2891.TW': '中信金', '2889.TW': '國票金',
     '3008.TW': '大立光', '2308.TW': '台達電', '2885.TW': '元大金', '2618.TW': '長榮航',
-    '9904.TW': '寶成', '1527.TW': '鑽全', '2002.TW': '中鋼', '3211.TWO': '順達',
-    '2395.TW': '研華', '3551.TWO': '世禾', '8067.TWO': '汎銓'
+    '3211.TWO': '順達', '2395.TW': '研華', '3551.TWO': '世禾', '8067.TWO': '汎銓'
 }
 
 def get_stock_name(symbol):
@@ -62,7 +60,7 @@ def send_telegram_message(message):
     if not TELEGRAM_TOKEN: return
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     try:
-        requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}, timeout=10)
+        requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}, timeout=15)
     except Exception as e:
         print(f"Telegram send failed: {e}")
 
@@ -128,7 +126,7 @@ EXTRA_WARNING_STOCKS: set = set()  # 手動補充用
 
 # 國營/官股護盤股 — 官股買盤不在外資/投信籌碼裡，會低估真實買盤
 STATE_OWNED_STOCKS: set = {
-    '2002.TW',  # 中鋼
+    '2330.TW', # 示例
 }
 
 def is_state_owned(symbol):
@@ -290,9 +288,8 @@ def send_summary(results):
 
 # ============================================================
 #  晚間收盤重點報告（過熱 / 弱勢 / 核心 + 支撐壓力 + 乖離）
-#  與本機 daily_stock_scanner.py 同邏輯，給 Telegram 用
 # ============================================================
-CORE_STOCKS = ['2330.TW', '6669.TW', '2308.TW']  # 三大核心：台積電/緯穎/台達電
+CORE_STOCKS = ['2330.TW', '6669.TW', '2308.TW']  # 三大核心
 
 
 def _calc_rsi(close, window=14):
@@ -311,7 +308,6 @@ def _ma(close, n):
 
 
 def _nearest_levels(price, candidates):
-    """挑出最近的壓力/支撐（各最多 2 檔），合併相同價位標籤。"""
     merged = {}
     for label, val in candidates:
         if val is None:
@@ -325,9 +321,7 @@ def _nearest_levels(price, candidates):
 
 
 def analyze_levels(symbol):
-    """抓 1 年資料，算現價/RSI/均線/季線乖離/支撐壓力。"""
     try:
-        # 用 Ticker.history 循序抓：yf.download 在多執行緒下會互相污染資料
         df = yf.Ticker(symbol).history(period="1y")
         if df.empty or len(df) < 40:
             return None
@@ -363,9 +357,7 @@ def _fmt_levels(lst):
 
 
 def send_evening_report():
-    """每晚收盤後發一則『過熱/弱勢/核心』重點到 Telegram。"""
     print(f"Evening report start {now_tw()}")
-    # 循序抓，避免 yfinance 多執行緒污染資料
     data = [r for r in (analyze_levels(s) for s in watchlist) if r]
 
     def is_hot(r):
@@ -403,7 +395,6 @@ def send_evening_report():
 
 
 if __name__ == "__main__":
-    # mode: 'evening' = 收盤重點報告；其他 = 原本的盤中籌碼掃描
     mode = sys.argv[1] if len(sys.argv) > 1 else os.getenv("RUN_MODE", "intraday")
     if mode == "evening":
         send_evening_report()
