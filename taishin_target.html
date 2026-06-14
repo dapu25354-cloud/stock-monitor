@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台新新光金 (2887) 估值與戰略目標價決策系統</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #151d30;
+            --border-color: #24314f;
+            --text-main: #e2e8f0;
+            --text-dim: #7f92b0;
+            --link-color: #38bdf8;
+            --up-color: #4ade80;
+            --down-color: #f87171;
+            --warn-color: #fbbf24;
+            --extreme-bull: #bc85ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .title-section h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #38bdf8, #bc85ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-section p {
+            margin: 5px 0 0 0;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .update-tag {
+            background-color: #1e293b;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 10px;
+            display: inline-block;
+            font-family: monospace;
+        }
+
+        /* 雙欄主版面 */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media(min-width: 768px) {
+            .main-layout {
+                grid-template-columns: 3fr 2fr;
+            }
+        }
+
+        /* 卡片共用樣式 */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 即時報價卡 */
+        .price-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: radial-gradient(circle at top right, #1e293b, var(--card-bg));
+        }
+
+        .price-info h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #fff;
+        }
+
+        .price-info .symbol {
+            font-size: 13px;
+            color: var(--text-dim);
+            font-family: monospace;
+        }
+
+        .price-details {
+            text-align: right;
+        }
+
+        .price-val {
+            font-size: 38px;
+            font-weight: 700;
+            font-family: monospace;
+            display: block;
+            line-height: 1.1;
+        }
+
+        .price-change {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* 目標價動態計算器 */
+        .calculator-card {
+            border: 2px solid var(--link-color);
+            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.12);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 0;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calculator-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .slider-label {
+            color: var(--text-dim);
+        }
+
+        .slider-value {
+            font-weight: 700;
+            color: var(--link-color);
+            font-family: monospace;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #0b0f19;
+            border-radius: 3px;
+            outline: none;
+            accent-color: var(--link-color);
+        }
+
+        .calc-result-box {
+            background-color: rgba(0,0,0,0.25);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px dashed var(--border-color);
+        }
+
+        .calc-result-title {
+            font-size: 12px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .calc-result-val {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--up-color);
+            font-family: monospace;
+            margin: 5px 0;
+        }
+
+        .calc-result-desc {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        /* 多空評級與均線 */
+        .stars-rating {
+            font-size: 18px;
+            color: #ffb74d;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .trend-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .trend-bull-extreme { background: rgba(188, 133, 255, 0.15); color: var(--extreme-bull); border: 1px solid rgba(188, 133, 255, 0.3); }
+        .trend-bull { background: rgba(74, 222, 128, 0.15); color: var(--up-color); border: 1px solid rgba(74, 222, 128, 0.3); }
+        .trend-neutral { background: rgba(127, 146, 176, 0.15); color: var(--text-dim); border: 1px solid rgba(127, 146, 176, 0.3); }
+        .trend-bear { background: rgba(248, 113, 113, 0.15); color: var(--down-color); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+        /* 技術指標網格 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .metric-item {
+            background-color: rgba(255,255,255,0.01);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .metric-val {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            font-family: monospace;
+        }
+
+        .vp-badge {
+            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+        .vp-bull { background: rgba(74, 222, 128, 0.15); color: var(--up-color); }
+        .vp-bear { background: rgba(248, 113, 113, 0.15); color: var(--down-color); }
+        .vp-neutral { background: rgba(127, 146, 176, 0.15); color: var(--text-dim); }
+
+        /* 目標價場景卡 */
+        .scenario-box {
+            border-left: 4px solid var(--link-color);
+            padding: 12px;
+            background-color: rgba(255,255,255,0.015);
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scenario-box.conserv { border-left-color: var(--text-dim); }
+        .scenario-box.neut { border-left-color: var(--link-color); }
+        .scenario-box.optim { border-left-color: var(--extreme-bull); }
+
+        .scen-title {
+            font-weight: 700;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .scen-desc {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .scen-val {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .up-color { color: var(--up-color); }
+        .down-color { color: var(--down-color); }
+        .neutral-color { color: var(--text-dim); }
+
+        footer {
+            margin-top: 40px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="title-section">
+                <h1>台新新光金 (2887) 估值與目標價</h1>
+                <p>Layout Strategy 多因子分析與動態估值系統</p>
+            </div>
+            <div class="update-tag">
+                最後更新: 2026-06-14 17:56:51
+            </div>
+        </header>
+
+        <!-- 即時報價卡片 -->
+        <div class="card price-card">
+            <div class="price-info">
+                <h2>台新新光金</h2>
+                <span class="symbol">2887.TW • 合併存續公司</span>
+                <div>
+                    <div class="stars-rating">★★★★☆</div>
+                    <span class="trend-badge trend-bull">偏多操作</span>
+                </div>
+            </div>
+            <div class="price-details">
+                <span class="price-val">30.20</span>
+                <span class="price-change up-color">+1.45 (+5.04%)</span>
+            </div>
+        </div>
+
+        <!-- 雙欄佈局 -->
+        <div class="main-layout">
+            <!-- 左欄：動態目標價估算器 -->
+            <div>
+                <div class="card calculator-card">
+                    <div class="card-title">
+                        <span>🧮 動態目標價試算器</span>
+                        <span style="font-size:11px;color:var(--text-dim);font-weight:normal;">拉動滑桿即時計算</span>
+                    </div>
+                    
+                    <div class="calculator-grid">
+                        <!-- EPS 滑桿 -->
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <span class="slider-label">預估每股盈餘 (EPS)</span>
+                                <span class="slider-value" id="val-eps">1.91 元</span>
+                            </div>
+                            <input type="range" id="slide-eps" min="0.5" max="3.0" value="1.91" step="0.05" oninput="calculateTarget()">
+                        </div>
+
+                        <!-- PE 本益比滑桿 -->
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <span class="slider-label">預估本益比倍數 (P/E)</span>
+                                <span class="slider-value" id="val-pe">15.8 倍</span>
+                            </div>
+                            <input type="range" id="slide-pe" min="8" max="20" value="15.8" step="0.5" oninput="calculateTarget()">
+                        </div>
+
+                        <!-- 股利分配率滑桿 -->
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <span class="slider-label">預估配息股利</span>
+                                <span class="slider-value" id="val-div">0.90 元</span>
+                            </div>
+                            <input type="range" id="slide-div" min="0.2" max="2.0" value="0.90" step="0.05" oninput="calculateTarget()">
+                        </div>
+
+                        <!-- 目標殖利率滑桿 -->
+                        <div class="slider-group">
+                            <div class="slider-header">
+                                <span class="slider-label">目標殖利率要求</span>
+                                <span class="slider-value" id="val-yield">3.0%</span>
+                            </div>
+                            <input type="range" id="slide-yield" min="3.0" max="8.0" value="3.0" step="0.1" oninput="calculateTarget()">
+                        </div>
+                    </div>
+
+                    <!-- 計算結果呈現 -->
+                    <div class="calc-result-box">
+                        <div class="calc-result-title">🎯 本益比法推估目標價</div>
+                        <div class="calc-result-val" id="result-pe-target">30.20 元</div>
+                        <div class="calc-result-desc up-color" id="result-pe-diff">較現價空間: +0.0%</div>
+                    </div>
+
+                    <div class="calc-result-box" style="margin-top:15px; border-color:var(--extreme-bull);">
+                        <div class="calc-result-title">💰 股利殖利率法折現目標價</div>
+                        <div class="calc-result-val" id="result-yield-target" style="color:var(--extreme-bull)">30.20 元</div>
+                        <div class="calc-result-desc up-color" id="result-yield-diff">較現價空間: +0.0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右欄：技術指標與目標場景 -->
+            <div>
+                <!-- 關鍵指標 -->
+                <div class="card" style="padding-bottom:10px;">
+                    <div class="card-title">📊 關鍵量能與均線關卡</div>
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <span class="metric-label">成交密集 POC</span>
+                            <span class="metric-val">23.57 <small class="vp-badge vp-bull">量能密集支撐區</small></span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">前波底部防守</span>
+                            <span class="metric-val">22.85</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">月線 (20MA)</span>
+                            <span class="metric-val">25.82</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">季線 (60MA)</span>
+                            <span class="metric-val">24.64</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">半年線 (120MA)</span>
+                            <span class="metric-val">23.54</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">RSI(14)強度</span>
+                            <span class="metric-val">80.3%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 目標場景規劃 -->
+                <div class="card">
+                    <div class="card-title">🎯 戰略目標價場景規劃</div>
+                    
+                    <div class="scenario-box conserv">
+                        <div>
+                            <div class="scen-title">保守回測支撐</div>
+                            <div class="scen-desc">回測月線尋求防守</div>
+                        </div>
+                        <div class="scen-val neutral-color">25.82</div>
+                    </div>
+
+                    <div class="scenario-box neut">
+                        <div>
+                            <div class="scen-title">中性量能突破</div>
+                            <div class="scen-desc">站穩密集區往上挑戰</div>
+                        </div>
+                        <div class="scen-val text-buy" style="color:var(--link-color)">25.93</div>
+                    </div>
+
+                    <div class="scenario-box optim">
+                        <div>
+                            <div class="scen-title">樂觀估值重估</div>
+                            <div class="scen-desc">合併綜效顯現上看波段</div>
+                        </div>
+                        <div class="scen-val text-target" style="color:var(--extreme-bull)">37.75</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 評分明細說明 -->
+        <div class="card" style="font-size:12px;color:var(--text-dim);line-height:1.5;">
+            <strong>Layout Strategy 得分明細：</strong> 站上月線 (+1.0), 站上季線 (+1.0), MACD紅柱 (+1.0), RSI非強勢區 (0), 短均多頭排列 (+1.0) (總得分: 4.0 / 5.0 分)
+        </div>
+
+        <footer>
+            <p>© 2026 StockMaster 戰略決策中心. 由 GitHub Actions 提供雲端運算。</p>
+        </footer>
+    </div>
+
+    <script>
+        const currentPrice = 30.20;
+
+        function calculateTarget() {
+            const eps = parseFloat(document.getElementById('slide-eps').value);
+            const pe = parseFloat(document.getElementById('slide-pe').value);
+            const div = parseFloat(document.getElementById('slide-div').value);
+            const yld = parseFloat(document.getElementById('slide-yield').value) / 100.0;
+
+            // 更新滑桿數值文字顯示
+            document.getElementById('val-eps').innerText = eps.toFixed(2) + ' 元';
+            document.getElementById('val-pe').innerText = pe.toFixed(1) + ' 倍';
+            document.getElementById('val-div').innerText = div.toFixed(2) + ' 元';
+            document.getElementById('val-yield').innerText = (yld * 100).toFixed(1) + '%';
+
+            // 1. 本益比法目標價
+            const peTarget = eps * pe;
+            const peDiff = ((peTarget - currentPrice) / currentPrice * 100);
+            document.getElementById('result-pe-target').innerText = peTarget.toFixed(2) + ' 元';
+            
+            const peDiffEl = document.getElementById('result-pe-diff');
+            peDiffEl.innerText = '較現價空間: ' + (peDiff >= 0 ? '+' : '') + peDiff.toFixed(1) + '%';
+            peDiffEl.className = 'calc-result-desc ' + (peDiff >= 0 ? 'up-color' : 'down-color');
+
+            // 2. 殖利率折現法目標價
+            const yldTarget = div / yld;
+            const yldDiff = ((yldTarget - currentPrice) / currentPrice * 100);
+            document.getElementById('result-yield-target').innerText = yldTarget.toFixed(2) + ' 元';
+            
+            const yldDiffEl = document.getElementById('result-yield-diff');
+            yldDiffEl.innerText = '較現價空間: ' + (yldDiff >= 0 ? '+' : '') + yldDiff.toFixed(1) + '%';
+            yldDiffEl.className = 'calc-result-desc ' + (yldDiff >= 0 ? 'up-color' : 'down-color');
+        }
+    </script>
+</body>
+</html>

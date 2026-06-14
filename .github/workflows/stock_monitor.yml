@@ -79,11 +79,13 @@ jobs:
           fi
 
       - name: Generate static dashboard HTML
-        run: python generate_dashboard.py
+        run: |
+          python generate_dashboard.py
+          python taishin_target.py
 
       - name: Commit and push updated dashboard HTML
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html
+          git add index.html taishin_target.html
           git diff-index --quiet HEAD || (git commit -m "Auto-update stock dashboard HTML" && git push)
