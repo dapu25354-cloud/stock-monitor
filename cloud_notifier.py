@@ -38,19 +38,33 @@ if not TELEGRAM_TOKEN:
 # 主力大買訊號門檻：5 日累計籌碼集中度 > 8% 且 三大法人總和 > 0
 CHIP_THRESHOLD = 8
 
-watchlist = [
-    '6561.TWO', '7703.TWO', '4551.TW', '6640.TWO', '3231.TW',
-    '5347.TWO', '6669.TW', '2330.TW', '2891.TW',
-    '2889.TW', '3008.TW', '2308.TW', '2885.TW',
-    '2618.TW', '3211.TWO', '2395.TW', '3551.TWO', '8067.TWO'
-]
+watchlist = []
+try:
+    watchlist_path = os.path.join(os.path.dirname(__file__), "..", "watch_list.json")
+    if os.path.exists(watchlist_path):
+        with open(watchlist_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            watchlist = [item["symbol"] for item in data]
+except Exception as e:
+    print(f"載入 watch_list.json 失敗: {e}")
+
+if not watchlist:
+    watchlist = [
+        '6561.TWO', '7703.TWO', '4551.TW', '6640.TWO', '3231.TW',
+        '5347.TWO', '6669.TW', '2330.TW', '9907.TW', '2891.TW',
+        '2889.TW', '3362.TWO', '3008.TW', '2308.TW', '2885.TW',
+        '2618.TW', '9904.TW', '1527.TW', '2002.TW', '3211.TWO',
+        '2395.TW', '3551.TWO', '6830.TWO'
+    ]
 
 STOCK_NAMES = {
     '6561.TWO': '是方', '7703.TWO': '銳澤', '4551.TW': '智伸科', '6640.TWO': '均華',
     '3231.TW': '緯創', '5347.TWO': '世界', '6669.TW': '緯穎', '2330.TW': '台積電',
     '2891.TW': '中信金', '2889.TW': '國票金',
     '3008.TW': '大立光', '2308.TW': '台達電', '2885.TW': '元大金', '2618.TW': '長榮航',
-    '3211.TWO': '順達', '2395.TW': '研華', '3551.TWO': '世禾', '8067.TWO': '汎銓'
+    '3211.TWO': '順達', '2395.TW': '研華', '3551.TWO': '世禾', '6830.TWO': '汎銓',
+    '9907.TW': '統一實', '3362.TWO': '先進光', '9904.TW': '寶成', '1527.TW': '鑽全',
+    '2002.TW': '中鋼'
 }
 
 def get_stock_name(symbol):

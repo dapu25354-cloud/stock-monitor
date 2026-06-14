@@ -33,7 +33,7 @@ STOCK_NAMES = {
     '2891.TW': '中信金', '2889.TW': '國票金', '3008.TW': '大立光', '2308.TW': '台達電',
     '2885.TW': '元大金', '2618.TW': '長榮航', '3211.TWO': '順達', '2395.TW': '研華',
     '9907.TW': '統一實', '3362.TWO': '先進光', '9904.TW': '寶成', '1527.TW': '鑽全',
-    '2002.TW': '中鋼'
+    '2002.TW': '中鋼', '3551.TWO': '世禾', '6830.TW': '汎銓'
 }
 
 # ==================== 觀察股專屬戰略配置檔 ====================
@@ -58,7 +58,9 @@ STOCK_PROFILES = {
     "1527.TW": {"name": "鑽全", "target_pct": 0.10, "stop_loss_pct": 0.04},
     "2002.TW": {"name": "中鋼", "target_pct": 0.08, "stop_loss_pct": 0.03},
     "3211.TWO": {"name": "順達", "target_pct": 0.20, "stop_loss_pct": 0.05},
-    "2395.TW": {"name": "研華", "target_pct": 0.12, "stop_loss_pct": 0.04}
+    "2395.TW": {"name": "研華", "target_pct": 0.12, "stop_loss_pct": 0.04},
+    "3551.TWO": {"name": "世禾", "target_pct": 0.15, "stop_loss_pct": 0.05},
+    "6830.TW": {"name": "汎銓", "target_pct": 0.15, "stop_loss_pct": 0.05}
 }
 
 # 國營/官股護盤股
@@ -79,7 +81,7 @@ def clean_symbol(symbol):
     if '.' in symbol:
         return symbol
     if symbol.isdigit():
-        otc_prefixes = ('6561', '7703', '6640', '5347', '3211', '3551', '8067', '3362')
+        otc_prefixes = ('6561', '7703', '6640', '5347', '3211', '3551', '6830', '3362')
         if symbol.startswith(otc_prefixes):
             return f"{symbol}.TWO"
         return f"{symbol}.TW"
