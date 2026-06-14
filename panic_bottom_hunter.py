@@ -42,16 +42,9 @@ def load_watchlist():
     return []
 
 def send_telegram_msg(message):
-    import requests
-    load_config()
-    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
-        return
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    payload = {"chat_id": TELEGRAM_CHAT_ID, "text": message}
-    try:
-        requests.post(url, json=payload, timeout=15)
-    except Exception as e:
-        print(f"Telegram 發送失敗: {e}")
+    # Telegram notifications are completely disabled per user request to avoid notification floods.
+    print(f"[Telegram Disabled] Message not sent: {message.replace(chr(10), ' ')}")
+    return
 
 def analyze_panic_bottom(df):
     """

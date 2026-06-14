@@ -71,12 +71,9 @@ def get_stock_name(symbol):
     return STOCK_NAMES.get(symbol, symbol)
 
 def send_telegram_message(message):
-    if not TELEGRAM_TOKEN: return
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    try:
-        requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}, timeout=15)
-    except Exception as e:
-        print(f"Telegram send failed: {e}")
+    # Telegram notifications are completely disabled per user request to avoid notification floods.
+    print(f"[Telegram Disabled] Message not sent: {message.replace(chr(10), ' ')}")
+    return
 
 def _to_int(v):
     return int(str(v).replace(',', '').strip() or 0)

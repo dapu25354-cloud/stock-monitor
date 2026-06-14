@@ -12,24 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Telegram test message
-        env:
-          TG_TOKEN: ${{ secrets.TG_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
-          set +e
-          NOW=$(TZ=Asia/Taipei date '+%Y-%m-%d %H:%M:%S')
-          MSG="GitHub Actions test notification - ${NOW} (Taipei). If you see this, TG_TOKEN and TG_CHAT_ID are configured correctly and the notification channel is working."
-          response=$(curl -sS -w "HTTPSTATUS:%{http_code}" -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
-            --data-urlencode "chat_id=${TG_CHAT_ID}" \
-            --data-urlencode "text=${MSG}")
-          body=$(echo "$response" | sed -e 's/HTTPSTATUS\:.*//g')
-          status=$(echo "$response" | tr -d '\n' | sed -e 's/.*HTTPSTATUS://')
-          echo "HTTP status: $status"
-          echo "Response body: $body"
-          if [ "$status" = "200" ]; then
-            echo "::notice::Telegram test message sent successfully"
-            exit 0
-          else
-            echo "::error::Telegram API returned HTTP $status"
-            exit 1
-          fi
+          echo "Telegram notifications have been deprecated and disabled per user request."
+          echo "This workflow will no longer send messages."
+          exit 0
