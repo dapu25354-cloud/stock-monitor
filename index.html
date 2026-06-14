@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockMaster 雲端戰略儀表板</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #c9d1d9;
+            --text-dim: #8b949e;
+            --link-color: #58a6ff;
+            --up-color: #3fb950;
+            --down-color: #f85149;
+            --warn-color: #d29922;
+            --state-color: #1f6feb;
+            --signal-bg: rgba(88, 166, 255, 0.15);
+            --signal-color: #58a6ff;
+        }
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        header {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        
+        @media(min-width: 768px) {
+            header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: flex-end;
+            }
+        }
+
+        .title-section h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #58a6ff, #bc85ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-section p {
+            margin: 5px 0 0 0;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .update-tag {
+            background-color: #21262d;
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-top: 15px;
+            align-self: flex-start;
+            font-family: monospace;
+        }
+        
+        @media(min-width: 768px) {
+            .update-tag {
+                margin-top: 0;
+                align-self: auto;
+            }
+        }
+
+        /* 控制列 */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        @media(min-width: 768px) {
+            .controls {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .search-box {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            background-color: #161b22;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--link-color);
+        }
+
+        .filter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            background-color: #21262d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            background-color: #30363d;
+        }
+
+        .filter-btn.active {
+            background-color: var(--link-color);
+            color: #0d1117;
+            border-color: var(--link-color);
+            font-weight: 700;
+        }
+
+        /* 卡片網格 */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media(min-width: 600px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(min-width: 992px) {
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            border-color: #444c56;
+        }
+
+        .card-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        .stock-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f0f6fc;
+            display: block;
+        }
+
+        .stock-symbol {
+            font-size: 12px;
+            color: var(--text-dim);
+            font-family: monospace;
+        }
+
+        .trend-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .trend-bull {
+            background-color: rgba(63, 185, 80, 0.15);
+            color: var(--up-color);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+        }
+
+        .trend-bear {
+            background-color: rgba(248, 81, 73, 0.15);
+            color: var(--down-color);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+
+        .trend-warn {
+            background-color: rgba(210, 153, 34, 0.15);
+            color: var(--warn-color);
+            border: 1px solid rgba(210, 153, 34, 0.3);
+        }
+
+        .card-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 12px;
+        }
+
+        .price-val {
+            font-size: 26px;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .price-change {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .up-color { color: var(--up-color); }
+        .down-color { color: var(--down-color); }
+        .neutral-color { color: var(--text-dim); }
+
+        .badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 15px;
+            min-height: 22px;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .badge-warn {
+            background-color: rgba(210, 153, 34, 0.15);
+            color: var(--warn-color);
+            border: 1px solid rgba(210, 153, 34, 0.3);
+        }
+
+        .badge-state {
+            background-color: rgba(31, 110, 235, 0.15);
+            color: #58a6ff;
+            border: 1px solid rgba(31, 110, 235, 0.3);
+        }
+
+        .badge-signal {
+            background-color: var(--signal-bg);
+            color: var(--signal-color);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            background-color: rgba(255,255,255,0.01);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 2px;
+        }
+
+        .metric-val {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f0f6fc;
+            font-family: monospace;
+        }
+
+        .rsi-low {
+            color: var(--up-color);
+            background-color: rgba(63, 185, 80, 0.1);
+            padding: 0 4px;
+            border-radius: 3px;
+        }
+
+        .rsi-high {
+            color: var(--down-color);
+            background-color: rgba(248, 81, 73, 0.1);
+            padding: 0 4px;
+            border-radius: 3px;
+        }
+
+        .chip-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            margin-bottom: 15px;
+        }
+
+        .chip-summary {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .chip-val {
+            font-weight: 700;
+        }
+
+        .chip-high { color: var(--up-color); }
+        .chip-low { color: var(--down-color); }
+
+        .chip-details {
+            font-size: 11px;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+
+        .advice-box {
+            background-color: #1c2128;
+            border-left: 3px solid var(--link-color);
+            padding: 10px;
+            border-radius: 0 6px 6px 0;
+            font-size: 12px;
+            color: #b1bac4;
+            line-height: 1.4;
+            margin-top: auto;
+        }
+
+        .advice-box strong {
+            color: #f0f6fc;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 20px 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-dim);
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="title-section">
+                <h1>StockMaster 雲端戰略儀表板</h1>
+                <p>21 檔核心觀察股 • 雲端自動健檢與獵殺監控中心</p>
+            </div>
+            <div class="update-tag">
+                最後更新: 2026-06-14 15:50:19 (台灣時間)
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="搜尋股票代號或名稱..." onkeyup="filterCards()">
+            </div>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="setFilter('all', this)">全部</button>
+                <button class="filter-btn" onclick="setFilter('signal', this)">⚠️ 觸發訊號</button>
+                <button class="filter-btn" onclick="setFilter('bull', this)">🟢 偏多</button>
+                <button class="filter-btn" onclick="setFilter('bear', this)">🔴 偏空</button>
+            </div>
+        </div>
+
+        <div class="grid" id="cards-container">
+            
+        <div class="card" data-symbol="6561.TWO" data-name="是方" data-signals="" data-trend="trend-bear">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">是方</span>
+                    <span class="stock-symbol">6561.TWO</span>
+                </div>
+                <div class="trend-badge trend-bear">🔴 偏空弱勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">339.00</span>
+                    <span class="price-change up-color">+1.00 (+0.30%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">39.8</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">354.73</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+-4.4%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">334.35</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-32.47%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -173張 | 投信 +0張<br/>
+                        最新一日: 外資 -43張 | 投信 +0張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價已跌破 20MA 月線，多頭轉弱，建議適度減碼防禦。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="7703.TWO" data-name="銳澤" data-signals="" data-trend="trend-bear">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">銳澤</span>
+                    <span class="stock-symbol">7703.TWO</span>
+                </div>
+                <div class="trend-badge trend-bear">🔴 偏空弱勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">203.50</span>
+                    <span class="price-change up-color">+13.50 (+7.11%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">48.3</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">205.12</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+-0.8%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">189.62</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-14.82%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -97張 | 投信 +0張<br/>
+                        最新一日: 外資 +13張 | 投信 +0張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價已跌破 20MA 月線，多頭轉弱，建議適度減碼防禦。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="4551.TW" data-name="智伸科" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">智伸科</span>
+                    <span class="stock-symbol">4551.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">152.00</span>
+                    <span class="price-change up-color">+13.50 (+9.75%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">55.9</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">149.22</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+1.9%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">136.35</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">0.09%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +1870張 | 投信 -1863張<br/>
+                        最新一日: 外資 +485張 | 投信 +0張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="6640.TWO" data-name="均華" data-signals="⚔️ 冷血獵殺" data-trend="trend-bear">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">均華</span>
+                    <span class="stock-symbol">6640.TWO</span>
+                </div>
+                <div class="trend-badge trend-bear">🔴 偏空弱勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">1080.00</span>
+                    <span class="price-change up-color">+60.00 (+5.88%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    <span class="badge badge-signal">⚔️ 冷血獵殺</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val rsi-low">34.7</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">1262.75</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+-14.5%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">996.68</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">4.38%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +138張 | 投信 -68張<br/>
+                        最新一日: 外資 -72張 | 投信 +0張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>💡 偵測到極限超跌/反彈訊號！技術面有落底跡象，可考慮小量分批布局。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="3231.TW" data-name="緯創" data-signals="" data-trend="trend-bear">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">緯創</span>
+                    <span class="stock-symbol">3231.TW</span>
+                </div>
+                <div class="trend-badge trend-bear">🔴 偏空弱勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">156.00</span>
+                    <span class="price-change up-color">+3.50 (+2.30%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">50.5</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">156.47</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+-0.3%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">121.55</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-17.5%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -36019張 | 投信 -10596張<br/>
+                        最新一日: 外資 -5772張 | 投信 +804張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價已跌破 20MA 月線，多頭轉弱，建議適度減碼防禦。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="5347.TWO" data-name="世界" data-signals="💎 主力大買" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">世界</span>
+                    <span class="stock-symbol">5347.TWO</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">169.50</span>
+                    <span class="price-change up-color">+8.00 (+4.95%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    <span class="badge badge-signal">💎 主力大買</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">55.6</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">163.70</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+3.5%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">152.03</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-high">16.17%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +43919張 | 投信 -19700張<br/>
+                        最新一日: 外資 +4409張 | 投信 +5292張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="6669.TW" data-name="緯穎" data-signals="" data-trend="trend-bear">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">緯穎</span>
+                    <span class="stock-symbol">6669.TW</span>
+                </div>
+                <div class="trend-badge trend-bear">🔴 偏空弱勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">4850.00</span>
+                    <span class="price-change down-color">-50.00 (-1.02%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">43.4</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">5266.50</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val down-color">-7.9%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">4723.76</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-11.84%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -758張 | 投信 -322張<br/>
+                        最新一日: 外資 -315張 | 投信 -178張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價已跌破 20MA 月線，多頭轉弱，建議適度減碼防禦。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="2330.TW" data-name="台積電" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">台積電</span>
+                    <span class="stock-symbol">2330.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">2310.00</span>
+                    <span class="price-change up-color">+60.00 (+2.67%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    <span class="badge badge-state">🏛️ 官股</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">54.8</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">2292.99</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+0.7%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">2168.76</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-27.21%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -51995張 | 投信 +3848張<br/>
+                        最新一日: 外資 +3927張 | 投信 -150張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="9907.TW" data-name="統一實" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">統一實</span>
+                    <span class="stock-symbol">9907.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">16.70</span>
+                    <span class="price-change down-color">-0.05 (-0.30%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">52.4</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">16.26</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val down-color">2.7%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">15.53</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-16.53%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -2605張 | 投信 -712張<br/>
+                        最新一日: 外資 -573張 | 投信 -18張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="2891.TW" data-name="中信金" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">中信金</span>
+                    <span class="stock-symbol">2891.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">67.60</span>
+                    <span class="price-change up-color">+0.10 (+0.15%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">66.7</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">62.31</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+8.5%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">52.24</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">-3.99%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +43619張 | 投信 -55869張<br/>
+                        最新一日: 外資 +40901張 | 投信 -29618張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="2889.TW" data-name="國票金" data-signals="💎 主力大買" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">國票金</span>
+                    <span class="stock-symbol">2889.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">15.00</span>
+                    <span class="price-change up-color">+0.05 (+0.33%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    <span class="badge badge-signal">💎 主力大買</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">54.2</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">14.79</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+1.4%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">14.39</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-high">13.71%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +4832張 | 投信 +0張<br/>
+                        最新一日: 外資 +1413張 | 投信 +0張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="3362.TWO" data-name="先進光" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">先進光</span>
+                    <span class="stock-symbol">3362.TWO</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">160.50</span>
+                    <span class="price-change down-color">-3.50 (-2.13%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">69.6</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">130.45</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val down-color">23.0%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">91.59</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">-2.88%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -1281張 | 投信 +0張<br/>
+                        最新一日: 外資 -1382張 | 投信 +0張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="3008.TW" data-name="大立光" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">大立光</span>
+                    <span class="stock-symbol">3008.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">4020.00</span>
+                    <span class="price-change down-color">-145.00 (-3.48%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">62.9</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">3686.00</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val down-color">9.1%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">3141.45</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">1.34%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -315張 | 投信 +546張<br/>
+                        最新一日: 外資 -679張 | 投信 +219張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="2308.TW" data-name="台達電" data-signals="" data-trend="trend-bear">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">台達電</span>
+                    <span class="stock-symbol">2308.TW</span>
+                </div>
+                <div class="trend-badge trend-bear">🔴 偏空弱勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">2215.00</span>
+                    <span class="price-change up-color">+55.00 (+2.55%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">49.8</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">2258.75</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+-1.9%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">1899.42</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-10.58%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -7129張 | 投信 +24張<br/>
+                        最新一日: 外資 +714張 | 投信 -840張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價已跌破 20MA 月線，多頭轉弱，建議適度減碼防禦。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="2885.TW" data-name="元大金" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">元大金</span>
+                    <span class="stock-symbol">2885.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">63.90</span>
+                    <span class="price-change up-color">+2.30 (+3.73%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">64.1</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">59.59</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+7.2%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">52.31</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-9.21%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -12978張 | 投信 -1783張<br/>
+                        最新一日: 外資 +2135張 | 投信 -815張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="2618.TW" data-name="長榮航" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">長榮航</span>
+                    <span class="stock-symbol">2618.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">38.70</span>
+                    <span class="price-change up-color">+1.00 (+2.65%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">66.9</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">36.29</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+6.6%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">33.54</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">7.61%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +49076張 | 投信 -30120張<br/>
+                        最新一日: 外資 +37749張 | 投信 -5396張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="9904.TW" data-name="寶成" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">寶成</span>
+                    <span class="stock-symbol">9904.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">26.65</span>
+                    <span class="price-change up-color">+0.35 (+1.33%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">56.5</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">26.00</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+2.5%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">25.14</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">-3.25%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -2593張 | 投信 -932張<br/>
+                        最新一日: 外資 +4974張 | 投信 -107張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="1527.TW" data-name="鑽全" data-signals="💎 主力大買" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">鑽全</span>
+                    <span class="stock-symbol">1527.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">33.25</span>
+                    <span class="price-change up-color">+0.10 (+0.30%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    <span class="badge badge-signal">💎 主力大買</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">55.4</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">33.01</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+0.7%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">32.28</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-high">22.14%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +242張 | 投信 +0張<br/>
+                        最新一日: 外資 +74張 | 投信 +0張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="2002.TW" data-name="中鋼" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">中鋼</span>
+                    <span class="stock-symbol">2002.TW</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">18.90</span>
+                    <span class="price-change up-color">+0.35 (+1.89%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">50.0</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">18.85</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+0.3%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">17.85</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val chip-low">-9.86%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 -32762張 | 投信 +889張<br/>
+                        最新一日: 外資 +28337張 | 投信 +94張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="3211.TWO" data-name="順達" data-signals="" data-trend="trend-bull">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">順達</span>
+                    <span class="stock-symbol">3211.TWO</span>
+                </div>
+                <div class="trend-badge trend-bull">🟢 偏多趨勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">418.00</span>
+                    <span class="price-change up-color">+19.50 (+4.89%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">52.3</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">414.40</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+0.9%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">341.44</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">5.58%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +2109張 | 投信 -24張<br/>
+                        最新一日: 外資 -211張 | 投信 +966張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價守穩 20MA 月線之上，趨勢偏多，持股續抱或逢回加碼。
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" data-symbol="2395.TW" data-name="研華" data-signals="" data-trend="trend-bear">
+            <div class="card-header">
+                <div>
+                    <span class="stock-name">研華</span>
+                    <span class="stock-symbol">2395.TW</span>
+                </div>
+                <div class="trend-badge trend-bear">🔴 偏空弱勢</div>
+            </div>
+            
+            <div class="card-body">
+                <div class="price-row">
+                    <span class="price-val">473.00</span>
+                    <span class="price-change up-color">+9.00 (+1.94%)</span>
+                </div>
+                
+                <div class="badges-row">
+                    
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">RSI(14)</span>
+                        <span class="metric-val ">51.4</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線 (20MA)</span>
+                        <span class="metric-val">487.27</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">月線乖離</span>
+                        <span class="metric-val up-color">+-2.9%</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">布林下軌</span>
+                        <span class="metric-val">444.34</span>
+                    </div>
+                </div>
+                
+                <div class="chip-section">
+                    <div class="chip-summary">
+                        <span>5日籌碼集中度</span>
+                        <span class="chip-val ">2.98%</span>
+                    </div>
+                    <div class="chip-details">
+                        5日法人買賣超: 外資 +662張 | 投信 -175張<br/>
+                        最新一日: 外資 +36張 | 投信 +49張
+                    </div>
+                </div>
+                
+                <div class="advice-box">
+                    <strong>操作戰略：</strong>股價已跌破 20MA 月線，多頭轉弱，建議適度減碼防禦。
+                </div>
+            </div>
+        </div>
+        
+        </div>
+
+        <footer>
+            <p>© 2026 StockMaster. 由 GitHub Actions 雲端自動執行更新。</p>
+        </footer>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+
+        function setFilter(filter, btnElement) {
+            // 變更 active 按鈕
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            currentFilter = filter;
+            filterCards();
+        }
+
+        function filterCards() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name').toLowerCase();
+                const symbol = card.getAttribute('data-symbol').toLowerCase();
+                const signals = card.getAttribute('data-signals');
+                const trendClass = card.getAttribute('data-trend');
+                
+                // 搜尋文字篩選
+                const matchesSearch = name.includes(query) || symbol.includes(query);
+                
+                // 按鈕分類篩選
+                let matchesFilter = false;
+                if (currentFilter === 'all') {
+                    matchesFilter = true;
+                } else if (currentFilter === 'signal') {
+                    matchesFilter = signals && signals.length > 0;
+                } else if (currentFilter === 'bull') {
+                    matchesFilter = trendClass === 'trend-bull';
+                } else if (currentFilter === 'bear') {
+                    matchesFilter = trendClass === 'trend-bear';
+                }
+                
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -21,6 +21,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -75,3 +77,13 @@ jobs:
             echo "Mode: Evening Closing Report"
             python cloud_notifier.py evening
           fi
+
+      - name: Generate static dashboard HTML
+        run: python generate_dashboard.py
+
+      - name: Commit and push updated dashboard HTML
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff-index --quiet HEAD || (git commit -m "Auto-update stock dashboard HTML" && git push)
