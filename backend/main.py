@@ -40,10 +40,9 @@ cache_results: List[Dict] = []
 last_update_time: str = "尚未更新"
 
 def send_telegram_message(message: str):
-    if not TELEGRAM_TOKEN or "your_token" in TELEGRAM_TOKEN: return
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    try: requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message, "parse_mode": "Markdown"}, timeout=5)
-    except: pass
+    # Telegram notifications are completely disabled per user request to avoid notification floods.
+    print(f"[Telegram Disabled] Message not sent: {message}")
+    return
 
 def get_stock_name(symbol: str):
     STOCK_NAMES = {
