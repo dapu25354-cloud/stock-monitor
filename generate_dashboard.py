@@ -717,7 +717,7 @@ def build_dashboard():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StockMaster Layout Strategy 戰略佈局儀表板</title>
+    <title>庫存股雷達</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {{
@@ -1377,7 +1377,7 @@ def build_dashboard():
     <div class="container">
         <header>
             <div class="title-section">
-                <h1>StockMaster 戰略佈局儀表板</h1>
+                <h1>庫存股雷達</h1>
                 <p>21 檔核心觀察股 • Layout Strategy 多因子星級健檢中心</p>
             </div>
             <div class="update-container">
@@ -1409,7 +1409,7 @@ def build_dashboard():
         </div>
 
         <footer>
-            <p>© 2026 StockMaster. 由 GitHub Actions 雲端自動執行更新。</p>
+            <p>© 2026 庫存股雷達. 由 GitHub Actions 雲端自動執行更新。</p>
         </footer>
     </div>
 
