@@ -21,5 +21,6 @@
     {"symbol": "3211.TWO", "name": "順達", "target": 0.0, "condition": "TP", "status": "監控中", "alerted": false},
     {"symbol": "2395.TW", "name": "研華", "target": 0.0, "condition": "TP", "status": "監控中", "alerted": false},
     {"symbol": "3551.TWO", "name": "世禾", "target": 0.0, "condition": "TP", "status": "監控中", "alerted": false},
-    {"symbol": "6830.TW", "name": "汎銓", "target": 0.0, "condition": "TP", "status": "監控中", "alerted": false}
+    {"symbol": "6830.TW", "name": "汎銓", "target": 0.0, "condition": "TP", "status": "監控中", "alerted": false},
+    {"symbol": "2887.TW", "name": "台新金", "target": 0.0, "condition": "TP", "status": "監控中", "alerted": false}
 ]
