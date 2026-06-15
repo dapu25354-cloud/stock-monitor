@@ -847,6 +847,112 @@ def build_dashboard():
             transform: none;
         }}
 
+        /* Modal 彈出視窗樣式 */
+        .token-modal {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }}
+
+        .token-modal.show {{
+            opacity: 1;
+            pointer-events: auto;
+        }}
+
+        .token-modal-content {{
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }}
+
+        .token-modal.show .token-modal-content {{
+            transform: scale(1);
+        }}
+
+        .token-modal-content h3 {{
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }}
+
+        .token-modal-content p {{
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }}
+
+        .token-modal-content input {{
+            background-color: #161b22;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }}
+
+        .token-modal-content input:focus {{
+            border-color: var(--link-color);
+        }}
+
+        .token-modal-buttons {{
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 5px;
+        }}
+
+        .modal-btn {{
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }}
+
+        .modal-btn.confirm {{
+            background: linear-gradient(135deg, #1f6feb, #58a6ff);
+            color: #fff;
+        }}
+
+        .modal-btn.confirm:hover {{
+            filter: brightness(1.1);
+        }}
+
+        .modal-btn.cancel {{
+            background-color: #212835;
+            color: var(--text-main);
+        }}
+
+        .modal-btn.cancel:hover {{
+            background-color: #30363d;
+        }}
+
         /* 控制列 */
         .controls {{
             display: flex;
@@ -1308,6 +1414,19 @@ def build_dashboard():
         </footer>
     </div>
 
+    <!-- Token Modal -->
+    <div id="token-modal" class="token-modal">
+        <div class="token-modal-content">
+            <h3>🔑 輸入 GitHub Token</h3>
+            <p>請輸入您的 Personal Access Token (PAT) 以便啟動雲端更新。此 Token 僅儲存於您手機的瀏覽器中，安全無虞。</p>
+            <input type="password" id="modal-token-input" placeholder="請在此貼上 github_pat_...">
+            <div class="token-modal-buttons">
+                <button id="modal-confirm-btn" class="modal-btn confirm">確認</button>
+                <button id="modal-cancel-btn" class="modal-btn cancel">取消</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentFilter = 'all';
 
@@ -1355,12 +1474,43 @@ def build_dashboard():
             
             let token = localStorage.getItem('github_token');
             if (!token) {{
-                token = prompt("請輸入您的 GitHub Personal Access Token (PAT) 以便觸發更新：\\n(此 Token 僅儲存於您手機瀏覽器的 localStorage 中，不會上傳到任何其他伺服器)");
-                if (!token) return;
-                token = token.trim();
-                localStorage.setItem('github_token', token);
+                showTokenModal(async function(inputToken) {{
+                    if (!inputToken) return;
+                    localStorage.setItem('github_token', inputToken);
+                    await sendUpdateRequest(inputToken, btn);
+                }});
+            }} else {{
+                await sendUpdateRequest(token, btn);
             }}
+        }}
 
+        function showTokenModal(callback) {{
+            const modal = document.getElementById('token-modal');
+            const input = document.getElementById('modal-token-input');
+            input.value = '';
+            modal.classList.add('show');
+            input.focus();
+
+            document.getElementById('modal-confirm-btn').onclick = function() {{
+                const val = input.value.trim();
+                modal.classList.remove('show');
+                callback(val);
+            }};
+
+            document.getElementById('modal-cancel-btn').onclick = function() {{
+                modal.classList.remove('show');
+                callback(null);
+            }};
+
+            modal.onclick = function(e) {{
+                if (e.target === modal) {{
+                    modal.classList.remove('show');
+                    callback(null);
+                }}
+            }};
+        }}
+
+        async function sendUpdateRequest(token, btn) {{
             btn.disabled = true;
             btn.innerHTML = '⏳ 正在發送更新請求...';
 
@@ -1431,6 +1581,7 @@ def build_dashboard():
         
         if (document.readyState === 'interactive' || document.readyState === 'complete') {{
             checkTokenDisplay();
+        }}
     </script>
 </body>
 </html>
