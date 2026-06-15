@@ -794,16 +794,57 @@ def build_dashboard():
             border-radius: 8px;
             font-size: 13px;
             color: var(--text-dim);
-            margin-top: 15px;
-            align-self: flex-start;
             font-family: monospace;
         }}
-        
+
+        .update-container {{
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 15px;
+            align-self: flex-start;
+        }}
+
         @media(min-width: 768px) {{
-            .update-tag {{
+            .update-container {{
                 margin-top: 0;
                 align-self: auto;
             }}
+        }}
+
+        .force-update-btn {{
+            background: linear-gradient(135deg, #1f6feb, #58a6ff);
+            border: none;
+            color: #ffffff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+
+        .force-update-btn:hover {{
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(88, 166, 255, 0.3);
+            filter: brightness(1.1);
+        }}
+
+        .force-update-btn:active {{
+            transform: translateY(1px);
+        }}
+
+        .force-update-btn:disabled {{
+            background: #212835;
+            color: var(--text-dim);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
         }}
 
         /* 控制列 */
@@ -1234,8 +1275,14 @@ def build_dashboard():
                 <h1>StockMaster 戰略佈局儀表板</h1>
                 <p>21 檔核心觀察股 • Layout Strategy 多因子星級健檢中心</p>
             </div>
-            <div class="update-tag">
-                最後更新: {now_str} (台灣時間)
+            <div class="update-container">
+                <div class="update-tag">
+                    最後更新: {now_str} (台灣時間)
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button id="force-update-btn" class="force-update-btn" onclick="triggerWorkflow()">⚡ 強制更新資料</button>
+                    <a href="javascript:void(0)" onclick="resetToken()" id="reset-token-link" style="color: var(--text-dim); font-size: 11px; text-decoration: none; display: none;">重設 Token</a>
+                </div>
             </div>
         </header>
 
@@ -1302,11 +1349,92 @@ def build_dashboard():
                 }}
             }});
         }}
+
+        async function triggerWorkflow() {{
+            const btn = document.getElementById('force-update-btn');
+            
+            let token = localStorage.getItem('github_token');
+            if (!token) {{
+                token = prompt("請輸入您的 GitHub Personal Access Token (PAT) 以便觸發更新：\\n(此 Token 僅儲存於您手機瀏覽器的 localStorage 中，不會上傳到任何其他伺服器)");
+                if (!token) return;
+                token = token.trim();
+                localStorage.setItem('github_token', token);
+            }}
+
+            btn.disabled = true;
+            btn.innerHTML = '⏳ 正在發送更新請求...';
+
+            try {{
+                const owner = 'dapu25354-cloud';
+                const repo = 'stock-monitor';
+                const workflowId = 'stock_monitor.yml';
+                
+                const response = await fetch(`https://api.github.com/repos/${{owner}}/${{repo}}/actions/workflows/${{workflowId}}/dispatches`, {{
+                    method: 'POST',
+                    headers: {{
+                        'Authorization': `Bearer ${{token}}`,
+                        'Accept': 'application/vnd.github+json',
+                        'Content-Type': 'application/json'
+                    }},
+                    body: JSON.stringify({{
+                        ref: 'main',
+                        inputs: {{
+                            mode: 'intraday'
+                        }}
+                    }})
+                }});
+
+                if (response.status === 204) {{
+                    alert('🎉 已成功觸發 GitHub Actions 雲端更新！\\n更新過程約需要 1~2 分鐘，請於 1-2 分鐘後重新整理網頁查看最新數據。');
+                    btn.innerHTML = '✅ 已觸發更新 (請稍後重整理)';
+                    setTimeout(() => {{
+                        btn.disabled = false;
+                        btn.innerHTML = '⚡ 強制更新資料';
+                    }}, 60000);
+                }} else {{
+                    const errData = await response.json().catch(() => ({{}}));
+                    const errMsg = errData.message || `HTTP ${{response.status}}`;
+                    alert(`❌ 觸發失敗：${{errMsg}}\\n可能原因：Token 無效或沒有 Actions 權限。`);
+                    
+                    if (response.status === 401 || response.status === 403 || response.status === 404) {{
+                        localStorage.removeItem('github_token');
+                    }}
+                    
+                    btn.disabled = false;
+                    btn.innerHTML = '⚡ 強制更新資料';
+                }}
+            }} catch (error) {{
+                alert(`❌ 連線錯誤：${{error.message}}`);
+                btn.disabled = false;
+                btn.innerHTML = '⚡ 強制更新資料';
+            }}
+            checkTokenDisplay();
+        }}
+
+        function checkTokenDisplay() {{
+            const token = localStorage.getItem('github_token');
+            const link = document.getElementById('reset-token-link');
+            if (token) {{
+                link.style.display = 'inline';
+            }} else {{
+                link.style.display = 'none';
+            }}
+        }}
+
+        function resetToken() {{
+            localStorage.removeItem('github_token');
+            alert('GitHub Token 已清除，下次點擊更新時將會重新提示輸入。');
+            checkTokenDisplay();
+        }}
+
+        window.addEventListener('DOMContentLoaded', checkTokenDisplay);
+        
+        if (document.readyState === 'interactive' || document.readyState === 'complete') {{
+            checkTokenDisplay();
     </script>
 </body>
 </html>
 """
-    
     output_path = os.path.join(os.path.dirname(__file__), "index.html")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_template)

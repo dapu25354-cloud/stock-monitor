@@ -80,16 +80,57 @@
             border-radius: 8px;
             font-size: 13px;
             color: var(--text-dim);
-            margin-top: 15px;
-            align-self: flex-start;
             font-family: monospace;
         }
-        
+
+        .update-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            margin-top: 15px;
+            align-self: flex-start;
+        }
+
         @media(min-width: 768px) {
-            .update-tag {
+            .update-container {
                 margin-top: 0;
                 align-self: auto;
             }
+        }
+
+        .force-update-btn {
+            background: linear-gradient(135deg, #1f6feb, #58a6ff);
+            border: none;
+            color: #ffffff;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .force-update-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(88, 166, 255, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .force-update-btn:active {
+            transform: translateY(1px);
+        }
+
+        .force-update-btn:disabled {
+            background: #212835;
+            color: var(--text-dim);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
         }
 
         /* 控制列 */
@@ -520,8 +561,14 @@
                 <h1>StockMaster 戰略佈局儀表板</h1>
                 <p>21 檔核心觀察股 • Layout Strategy 多因子星級健檢中心</p>
             </div>
-            <div class="update-tag">
-                最後更新: 2026-06-15 20:07:17 (台灣時間)
+            <div class="update-container">
+                <div class="update-tag">
+                    最後更新: 2026-06-15 20:15:21 (台灣時間)
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button id="force-update-btn" class="force-update-btn" onclick="triggerWorkflow()">⚡ 強制更新資料</button>
+                    <a href="javascript:void(0)" onclick="resetToken()" id="reset-token-link" style="color: var(--text-dim); font-size: 11px; text-decoration: none; display: none;">重設 Token</a>
+                </div>
             </div>
         </header>
 
@@ -766,12 +813,12 @@
                 <div class="score-section">
                     <div class="score-title">
                         <span>綜合多空評分</span>
-                        <span class="score-val">4.5 / 5.0 分</span>
+                        <span class="score-val">5.0 / 5.0 分</span>
                     </div>
                     <div class="score-bar-container">
-                        <div class="score-bar-fill trend-bull-extreme" style="width: 90.0%"></div>
+                        <div class="score-bar-fill trend-bull-extreme" style="width: 100.0%"></div>
                     </div>
-                    <div class="score-details">站上月線 (+1), MACD紅柱 (+1), RSI強勢區 (+1), 法人中性偏賣 (0), 均線金叉 (+0.5), 主力洗盤 (+1)</div>
+                    <div class="score-details">站上月線 (+1), MACD紅柱 (+1), RSI強勢區 (+1), 法人微買 (+0.5), 均線金叉 (+0.5), 主力洗盤 (+1)</div>
                 </div>
                 
                 <div class="metrics-grid">
@@ -804,11 +851,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val ">-6.29%</span>
+                        <span class="chip-val ">+0.57%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 +1505張 | 投信 -2055張<br/>
-                        最新一日法人: 外資 +167張 | 投信 -282張
+                        5日法人買賣超: 外資 +1823張 | 投信 -1773張<br/>
+                        最新一日法人: 外資 +485張 | 投信 +0張
                     </div>
                 </div>
 
@@ -1004,11 +1051,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-15.40%</span>
+                        <span class="chip-val chip-low">-10.93%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -26168張 | 投信 -11263張<br/>
-                        最新一日法人: 外資 -3627張 | 投信 -12215張
+                        5日法人買賣超: 外資 -28313張 | 投信 +1756張<br/>
+                        最新一日法人: 外資 -5772張 | 投信 +804張
                     </div>
                 </div>
 
@@ -1204,11 +1251,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val ">-7.96%</span>
+                        <span class="chip-val chip-low">-17.50%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -581張 | 投信 -87張<br/>
-                        最新一日法人: 外資 +368張 | 投信 -60張
+                        5日法人買賣超: 外資 -1264張 | 投信 -205張<br/>
+                        最新一日法人: 外資 -315張 | 投信 -178張
                     </div>
                 </div>
 
@@ -1304,11 +1351,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-41.77%</span>
+                        <span class="chip-val chip-low">-36.73%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -73762張 | 投信 +6898張<br/>
-                        最新一日法人: 外資 -4905張 | 投信 +612張
+                        5日法人買賣超: 外資 -64930張 | 投信 +6136張<br/>
+                        最新一日法人: 外資 +3927張 | 投信 -150張
                     </div>
                 </div>
 
@@ -1393,22 +1440,22 @@
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">本益比</span>
-                        <span class="metric-val">N/A</span>
+                        <span class="metric-val">12.32倍</span>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">殖利率</span>
-                        <span class="metric-val value-dy">N/A</span>
+                        <span class="metric-val value-dy">7.07%</span>
                     </div>
                 </div>
                 
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-23.64%</span>
+                        <span class="chip-val chip-low">-18.48%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -3253張 | 投信 -1541張<br/>
-                        最新一日法人: 外資 -1636張 | 投信 +0張
+                        5日法人買賣超: 外資 -2190張 | 投信 -1559張<br/>
+                        最新一日法人: 外資 -573張 | 投信 -18張
                     </div>
                 </div>
 
@@ -1493,22 +1540,22 @@
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">本益比</span>
-                        <span class="metric-val">N/A</span>
+                        <span class="metric-val">17.27倍</span>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">殖利率</span>
-                        <span class="metric-val value-dy">N/A</span>
+                        <span class="metric-val value-dy">3.40%</span>
                     </div>
                 </div>
                 
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-14.39%</span>
+                        <span class="chip-val chip-low">-9.79%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -10715張 | 投信 -33008張<br/>
-                        最新一日法人: 外資 +6185張 | 投信 -8886張
+                        5日法人買賣超: 外資 +24001張 | 投信 -53740張<br/>
+                        最新一日法人: 外資 +40901張 | 投信 -29618張
                     </div>
                 </div>
 
@@ -1566,12 +1613,12 @@
                 <div class="score-section">
                     <div class="score-title">
                         <span>綜合多空評分</span>
-                        <span class="score-val">5.5 / 5.0 分</span>
+                        <span class="score-val">6.0 / 5.0 分</span>
                     </div>
                     <div class="score-bar-container">
-                        <div class="score-bar-fill trend-bull-extreme" style="width: 110.00000000000001%"></div>
+                        <div class="score-bar-fill trend-bull-extreme" style="width: 120.0%"></div>
                     </div>
-                    <div class="score-details">站上月線 (+1), MACD紅柱 (+1), RSI強勢區 (+1), 法人微買 (+0.5), 均線多頭 (+1), 主力洗盤 (+1)</div>
+                    <div class="score-details">站上月線 (+1), MACD紅柱 (+1), RSI強勢區 (+1), 法人鎖碼 (+1), 均線多頭 (+1), 主力洗盤 (+1)</div>
                 </div>
                 
                 <div class="metrics-grid">
@@ -1604,11 +1651,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val ">+7.21%</span>
+                        <span class="chip-val chip-high">+11.69%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 +2762張 | 投信 +0張<br/>
-                        最新一日法人: 外資 -304張 | 投信 +0張
+                        5日法人買賣超: 外資 +4479張 | 投信 +0張<br/>
+                        最新一日法人: 外資 +1413張 | 投信 +0張
                     </div>
                 </div>
 
@@ -1621,7 +1668,7 @@
                 
                 <div class="layout-strategy-box">
                     <div class="strat-title">🎯 戰略佈局規劃</div>
-                    <div class="strat-desc">◆ 股價處於成交密集整理區 (籌碼反覆換手糾纏中)</div>
+                    <div class="strat-desc">◆ 股價處於成交密集整理區 (籌碼反覆換手糾纏中) + [🔥 法人強勢鎖碼]</div>
                     <div class="strat-grid">
                         <div class="strat-item">
                             <span class="s-label">佈局點價：</span>
@@ -1697,7 +1744,7 @@
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">殖利率</span>
-                        <span class="metric-val value-dy">N/A</span>
+                        <span class="metric-val value-dy">0.62%</span>
                     </div>
                 </div>
                 
@@ -1793,22 +1840,22 @@
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">本益比</span>
-                        <span class="metric-val">N/A</span>
+                        <span class="metric-val">28.12倍</span>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">殖利率</span>
-                        <span class="metric-val value-dy">N/A</span>
+                        <span class="metric-val value-dy">1.99%</span>
                     </div>
                 </div>
                 
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val ">+3.10%</span>
+                        <span class="chip-val ">+3.80%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 +393張 | 投信 +179張<br/>
-                        最新一日法人: 外資 -684張 | 投信 +95張
+                        5日法人買賣超: 外資 +398張 | 投信 +303張<br/>
+                        最新一日法人: 外資 -679張 | 投信 +219張
                     </div>
                 </div>
 
@@ -1904,11 +1951,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-14.93%</span>
+                        <span class="chip-val chip-low">-14.55%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -10204張 | 投信 +797張<br/>
-                        最新一日法人: 外資 -447張 | 投信 +79張
+                        5日法人買賣超: 外資 -9043張 | 投信 -122張<br/>
+                        最新一日法人: 外資 +714張 | 投信 -840張
                     </div>
                 </div>
 
@@ -2004,11 +2051,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-10.28%</span>
+                        <span class="chip-val ">-4.25%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -7538張 | 投信 -5861張<br/>
-                        最新一日法人: 外資 -3167張 | 投信 -3372張
+                        5日法人買賣超: 外資 -2236張 | 投信 -3304張<br/>
+                        最新一日法人: 外資 +2135張 | 投信 -815張
                     </div>
                 </div>
 
@@ -2066,12 +2113,12 @@
                 <div class="score-section">
                     <div class="score-title">
                         <span>綜合多空評分</span>
-                        <span class="score-val">5.0 / 5.0 分</span>
+                        <span class="score-val">5.5 / 5.0 分</span>
                     </div>
                     <div class="score-bar-container">
-                        <div class="score-bar-fill trend-bull-extreme" style="width: 100.0%"></div>
+                        <div class="score-bar-fill trend-bull-extreme" style="width: 110.00000000000001%"></div>
                     </div>
-                    <div class="score-details">站上月線 (+1), MACD紅柱 (+1), RSI過熱 (+1), 法人中性偏賣 (0), 均線多頭 (+1), 主力洗盤 (+1)</div>
+                    <div class="score-details">站上月線 (+1), MACD紅柱 (+1), RSI過熱 (+1), 法人微買 (+0.5), 均線多頭 (+1), 主力洗盤 (+1)</div>
                 </div>
                 
                 <div class="metrics-grid">
@@ -2093,22 +2140,22 @@
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">本益比</span>
-                        <span class="metric-val">N/A</span>
+                        <span class="metric-val">8.32倍</span>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">殖利率</span>
-                        <span class="metric-val value-dy">N/A</span>
+                        <span class="metric-val value-dy">6.20%</span>
                     </div>
                 </div>
                 
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-10.40%</span>
+                        <span class="chip-val ">+0.83%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -797張 | 投信 -27795張<br/>
-                        最新一日法人: 外資 +5687張 | 投信 -4211張
+                        5日法人買賣超: 外資 +31265張 | 投信 -28980張<br/>
+                        最新一日法人: 外資 +37749張 | 投信 -5396張
                     </div>
                 </div>
 
@@ -2193,22 +2240,22 @@
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">本益比</span>
-                        <span class="metric-val">N/A</span>
+                        <span class="metric-val">6.53倍</span>
                     </div>
                     <div class="metric-item">
                         <span class="metric-label">殖利率</span>
-                        <span class="metric-val value-dy">N/A</span>
+                        <span class="metric-val value-dy">4.88%</span>
                     </div>
                 </div>
                 
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-13.92%</span>
+                        <span class="chip-val ">-3.46%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -13796張 | 投信 -1062張<br/>
-                        最新一日法人: 外資 -6326張 | 投信 +24張
+                        5日法人買賣超: 外資 -2496張 | 投信 -1193張<br/>
+                        最新一日法人: 外資 +4974張 | 投信 -107張
                     </div>
                 </div>
 
@@ -2304,11 +2351,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-high">+16.76%</span>
+                        <span class="chip-val chip-high">+27.80%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 +170張 | 投信 +0張<br/>
-                        最新一日法人: 外資 -38張 | 投信 +0張
+                        5日法人買賣超: 外資 +282張 | 投信 +0張<br/>
+                        最新一日法人: 外資 +74張 | 投信 +0張
                     </div>
                 </div>
 
@@ -2404,11 +2451,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-low">-19.29%</span>
+                        <span class="chip-val ">-3.47%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -55175張 | 投信 +1077張<br/>
-                        最新一日法人: 外資 -15979張 | 投信 +38張
+                        5日法人買賣超: 外資 -10859張 | 投信 +1133張<br/>
+                        最新一日法人: 外資 +28337張 | 投信 +94張
                     </div>
                 </div>
 
@@ -2604,11 +2651,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val ">-3.25%</span>
+                        <span class="chip-val ">-2.00%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 -259張 | 投信 -219張<br/>
-                        最新一日法人: 外資 +154張 | 投信 -253張
+                        5日法人買賣超: 外資 -377張 | 投信 +83張<br/>
+                        最新一日法人: 外資 +36張 | 投信 +49張
                     </div>
                 </div>
 
@@ -2804,11 +2851,11 @@
                 <div class="chip-section">
                     <div class="chip-summary">
                         <span>5日籌碼集中度</span>
-                        <span class="chip-val chip-high">+11.70%</span>
+                        <span class="chip-val chip-high">+12.46%</span>
                     </div>
                     <div class="chip-details">
-                        5日法人買賣超: 外資 +1580張 | 投信 -40張<br/>
-                        最新一日法人: 外資 -260張 | 投信 +0張
+                        5日法人買賣超: 外資 +1679張 | 投信 -40張<br/>
+                        最新一日法人: 外資 -161張 | 投信 +0張
                     </div>
                 </div>
 
@@ -2888,6 +2935,88 @@
                 }
             });
         }
+
+        async function triggerWorkflow() {
+            const btn = document.getElementById('force-update-btn');
+            
+            let token = localStorage.getItem('github_token');
+            if (!token) {
+                token = prompt("請輸入您的 GitHub Personal Access Token (PAT) 以便觸發更新：\n(此 Token 僅儲存於您手機瀏覽器的 localStorage 中，不會上傳到任何其他伺服器)");
+                if (!token) return;
+                token = token.trim();
+                localStorage.setItem('github_token', token);
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '⏳ 正在發送更新請求...';
+
+            try {
+                const owner = 'dapu25354-cloud';
+                const repo = 'stock-monitor';
+                const workflowId = 'stock_monitor.yml';
+                
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowId}/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ref: 'main',
+                        inputs: {
+                            mode: 'intraday'
+                        }
+                    })
+                });
+
+                if (response.status === 204) {
+                    alert('🎉 已成功觸發 GitHub Actions 雲端更新！\n更新過程約需要 1~2 分鐘，請於 1-2 分鐘後重新整理網頁查看最新數據。');
+                    btn.innerHTML = '✅ 已觸發更新 (請稍後重整理)';
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '⚡ 強制更新資料';
+                    }, 60000);
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    const errMsg = errData.message || `HTTP ${response.status}`;
+                    alert(`❌ 觸發失敗：${errMsg}\n可能原因：Token 無效或沒有 Actions 權限。`);
+                    
+                    if (response.status === 401 || response.status === 403 || response.status === 404) {
+                        localStorage.removeItem('github_token');
+                    }
+                    
+                    btn.disabled = false;
+                    btn.innerHTML = '⚡ 強制更新資料';
+                }
+            } catch (error) {
+                alert(`❌ 連線錯誤：${error.message}`);
+                btn.disabled = false;
+                btn.innerHTML = '⚡ 強制更新資料';
+            }
+            checkTokenDisplay();
+        }
+
+        function checkTokenDisplay() {
+            const token = localStorage.getItem('github_token');
+            const link = document.getElementById('reset-token-link');
+            if (token) {
+                link.style.display = 'inline';
+            } else {
+                link.style.display = 'none';
+            }
+        }
+
+        function resetToken() {
+            localStorage.removeItem('github_token');
+            alert('GitHub Token 已清除，下次點擊更新時將會重新提示輸入。');
+            checkTokenDisplay();
+        }
+
+        window.addEventListener('DOMContentLoaded', checkTokenDisplay);
+        
+        if (document.readyState === 'interactive' || document.readyState === 'complete') {
+            checkTokenDisplay();
     </script>
 </body>
 </html>
