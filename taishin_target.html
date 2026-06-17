@@ -331,7 +331,7 @@
                 <p>Layout Strategy 多因子分析與動態估值系統</p>
             </div>
             <div class="update-tag">
-                最後更新: 2026-06-16 10:22:26
+                最後更新: 2026-06-17 20:06:38
             </div>
         </header>
 
@@ -346,8 +346,8 @@
                 </div>
             </div>
             <div class="price-details">
-                <span class="price-val">32.30</span>
-                <span class="price-change up-color">+0.70 (+2.22%)</span>
+                <span class="price-val">32.60</span>
+                <span class="price-change up-color">+0.30 (+0.93%)</span>
             </div>
         </div>
 
@@ -366,18 +366,18 @@
                         <div class="slider-group">
                             <div class="slider-header">
                                 <span class="slider-label">預估每股盈餘 (EPS)</span>
-                                <span class="slider-value" id="val-eps">2.00 元</span>
+                                <span class="slider-value" id="val-eps">1.91 元</span>
                             </div>
-                            <input type="range" id="slide-eps" min="0.5" max="3.0" value="2.00" step="0.05" oninput="calculateTarget()">
+                            <input type="range" id="slide-eps" min="0.5" max="3.0" value="1.91" step="0.05" oninput="calculateTarget()">
                         </div>
 
                         <!-- PE 本益比滑桿 -->
                         <div class="slider-group">
                             <div class="slider-header">
                                 <span class="slider-label">預估本益比倍數 (P/E)</span>
-                                <span class="slider-value" id="val-pe">16.1 倍</span>
+                                <span class="slider-value" id="val-pe">17.1 倍</span>
                             </div>
-                            <input type="range" id="slide-pe" min="8" max="20" value="16.1" step="0.5" oninput="calculateTarget()">
+                            <input type="range" id="slide-pe" min="8" max="20" value="17.1" step="0.5" oninput="calculateTarget()">
                         </div>
 
                         <!-- 股利分配率滑桿 -->
@@ -393,23 +393,23 @@
                         <div class="slider-group">
                             <div class="slider-header">
                                 <span class="slider-label">目標殖利率要求</span>
-                                <span class="slider-value" id="val-yield">2.9%</span>
+                                <span class="slider-value" id="val-yield">2.8%</span>
                             </div>
-                            <input type="range" id="slide-yield" min="3.0" max="8.0" value="2.9" step="0.1" oninput="calculateTarget()">
+                            <input type="range" id="slide-yield" min="3.0" max="8.0" value="2.8" step="0.1" oninput="calculateTarget()">
                         </div>
                     </div>
 
                     <!-- 計算結果呈現 -->
                     <div class="calc-result-box">
                         <div class="calc-result-title">🎯 本益比法推估目標價</div>
-                        <div class="calc-result-val" id="result-pe-target">32.30 元</div>
-                        <div class="calc-result-desc up-color" id="result-pe-diff">較現價空間: +0.0%</div>
+                        <div class="calc-result-val" id="result-pe-target">32.60 元</div>
+                        <div class="calc-result-desc down-color" id="result-pe-diff">較現價空間: -0.0%</div>
                     </div>
 
                     <div class="calc-result-box" style="margin-top:15px; border-color:var(--extreme-bull);">
                         <div class="calc-result-title">💰 股利殖利率法折現目標價</div>
-                        <div class="calc-result-val" id="result-yield-target" style="color:var(--extreme-bull)">31.58 元</div>
-                        <div class="calc-result-desc down-color" id="result-yield-diff">較現價空間: -2.2%</div>
+                        <div class="calc-result-val" id="result-yield-target" style="color:var(--extreme-bull)">32.26 元</div>
+                        <div class="calc-result-desc down-color" id="result-yield-diff">較現價空間: -1.0%</div>
                     </div>
                 </div>
             </div>
@@ -422,7 +422,7 @@
                     <div class="metrics-grid">
                         <div class="metric-item">
                             <span class="metric-label">成交密集 POC</span>
-                            <span class="metric-val">23.60 <small class="vp-badge vp-bull">量能密集支撐區</small></span>
+                            <span class="metric-val">23.75 <small class="vp-badge vp-bull">量能密集支撐區</small></span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">前波底部防守</span>
@@ -430,19 +430,19 @@
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">月線 (20MA)</span>
-                            <span class="metric-val">26.66</span>
+                            <span class="metric-val">27.10</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">季線 (60MA)</span>
-                            <span class="metric-val">24.88</span>
+                            <span class="metric-val">25.02</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">半年線 (120MA)</span>
-                            <span class="metric-val">23.75</span>
+                            <span class="metric-val">23.86</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">RSI(14)強度</span>
-                            <span class="metric-val">84.9%</span>
+                            <span class="metric-val">87.2%</span>
                         </div>
                     </div>
                 </div>
@@ -456,7 +456,7 @@
                             <div class="scen-title">保守回測支撐</div>
                             <div class="scen-desc">回測月線尋求防守</div>
                         </div>
-                        <div class="scen-val neutral-color">26.66</div>
+                        <div class="scen-val neutral-color">27.10</div>
                     </div>
 
                     <div class="scenario-box neut">
@@ -464,7 +464,7 @@
                             <div class="scen-title">中性量能突破</div>
                             <div class="scen-desc">站穩密集區往上挑戰</div>
                         </div>
-                        <div class="scen-val text-buy" style="color:var(--link-color)">25.96</div>
+                        <div class="scen-val text-buy" style="color:var(--link-color)">26.13</div>
                     </div>
 
                     <div class="scenario-box optim">
@@ -472,7 +472,7 @@
                             <div class="scen-title">樂觀估值重估</div>
                             <div class="scen-desc">合併綜效顯現上看波段</div>
                         </div>
-                        <div class="scen-val text-target" style="color:var(--extreme-bull)">40.38</div>
+                        <div class="scen-val text-target" style="color:var(--extreme-bull)">40.75</div>
                     </div>
                 </div>
             </div>
@@ -489,7 +489,7 @@
     </div>
 
     <script>
-        const currentPrice = 32.30;
+        const currentPrice = 32.60;
 
         function calculateTarget() {
             const eps = parseFloat(document.getElementById('slide-eps').value);
