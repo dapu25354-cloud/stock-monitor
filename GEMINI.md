@@ -1,11 +1,11 @@
 # Project Context: Professional Stock Indicator System
 
 ## Core Requirements
-- **Watchlist**: Always monitor the specific 21 Taiwan stocks: 
+- **Watchlist**: Always monitor the specific 24 Taiwan stocks: 
     6561.TWO 是方, 7703.TWO 銳澤, 4551.TW 智伸科, 6640.TWO 均華, 3231.TW 緯創, 5347.TWO 世界, 
     6669.TW 緯穎, 2330.TW 台積電, 9907.TW 統一實, 2891.TW 中信金, 2889.TW 國票金, 3362.TWO 先進光, 
     3008.TW 大立光, 2308.TW 台達電, 2885.TW 元大金, 2618.TW 長榮航, 9904.TW 寶成, 1527.TW 鑽全, 
-    2002.TW 中鋼, 3211.TWO 順達, 2395.TW 研華.
+    2002.TW 中鋼, 3211.TWO 順達, 2395.TW 研華, 3551.TWO 世禾, 6830.TW 汎銓, 2887.TW 台新金.
 - **Technical Indicators**: 
     - Use the professional logic: TD (DeMark Sequential), KD, MACD, RSI, and 20MA.
     - Include **Chip Concentration** analysis (Three Institutional Investors data from TWSE/TPEx).
@@ -19,11 +19,10 @@
 - **Frontend**: `frontend/index.html` and `app.js` provide the real-time monitoring dashboard.
 
 ## Cloud Execution (GitHub Actions)
-- **Workflow**: `.github/workflows/stock_monitor.yml` handles automated scans.
-- **Schedules (Taiwan Time)**:
-    - **09:30 & 12:30**: Runs `cold_blooded_hunter.py` and `panic_bottom_hunter.py` (Intraday Mode).
-    - **20:00**: Runs `cloud_notifier.py` (Evening Closing Report).
-- **Secrets**: Requires `TG_TOKEN` and `TG_CHAT_ID` to be set in GitHub Repository Secrets.
+- **Workflow**: `.github/workflows/stock_monitor.yml` handles manual dispatch updates.
+- **Trigger Mode**: 
+    - Triggered manually via the **"⚡ 強制更新資料" (Force Update)** button on the "庫存股雷達" dashboard.
+    - Utilizes a locally stored GitHub PAT (`localStorage`) to send direct workflow dispatch API calls.
 
 ## Migrated Hunter Scripts (Cloud-Ready)
 - **`cold_blooded_hunter.py`**: Refactored for cloud use. Supports environment variables and relative paths.
