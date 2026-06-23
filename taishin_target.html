@@ -331,7 +331,7 @@
                 <p>Layout Strategy 多因子分析與動態估值系統</p>
             </div>
             <div class="update-tag">
-                最後更新: 2026-06-19 20:09:34
+                最後更新: 2026-06-23 15:48:37
             </div>
         </header>
 
@@ -346,8 +346,8 @@
                 </div>
             </div>
             <div class="price-details">
-                <span class="price-val">32.45</span>
-                <span class="price-change down-color">-0.15 (-0.46%)</span>
+                <span class="price-val">32.15</span>
+                <span class="price-change up-color">+0.10 (+0.31%)</span>
             </div>
         </div>
 
@@ -375,9 +375,9 @@
                         <div class="slider-group">
                             <div class="slider-header">
                                 <span class="slider-label">預估本益比倍數 (P/E)</span>
-                                <span class="slider-value" id="val-pe">17.0 倍</span>
+                                <span class="slider-value" id="val-pe">16.8 倍</span>
                             </div>
-                            <input type="range" id="slide-pe" min="8" max="20" value="17.0" step="0.5" oninput="calculateTarget()">
+                            <input type="range" id="slide-pe" min="8" max="20" value="16.8" step="0.5" oninput="calculateTarget()">
                         </div>
 
                         <!-- 股利分配率滑桿 -->
@@ -402,14 +402,14 @@
                     <!-- 計算結果呈現 -->
                     <div class="calc-result-box">
                         <div class="calc-result-title">🎯 本益比法推估目標價</div>
-                        <div class="calc-result-val" id="result-pe-target">32.45 元</div>
+                        <div class="calc-result-val" id="result-pe-target">32.15 元</div>
                         <div class="calc-result-desc up-color" id="result-pe-diff">較現價空間: +0.0%</div>
                     </div>
 
                     <div class="calc-result-box" style="margin-top:15px; border-color:var(--extreme-bull);">
                         <div class="calc-result-title">💰 股利殖利率法折現目標價</div>
-                        <div class="calc-result-val" id="result-yield-target" style="color:var(--extreme-bull)">32.26 元</div>
-                        <div class="calc-result-desc down-color" id="result-yield-diff">較現價空間: -0.6%</div>
+                        <div class="calc-result-val" id="result-yield-target" style="color:var(--extreme-bull)">32.03 元</div>
+                        <div class="calc-result-desc down-color" id="result-yield-diff">較現價空間: -0.4%</div>
                     </div>
                 </div>
             </div>
@@ -430,19 +430,19 @@
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">月線 (20MA)</span>
-                            <span class="metric-val">27.53</span>
+                            <span class="metric-val">28.38</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">季線 (60MA)</span>
-                            <span class="metric-val">25.16</span>
+                            <span class="metric-val">25.42</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">半年線 (120MA)</span>
-                            <span class="metric-val">23.97</span>
+                            <span class="metric-val">24.16</span>
                         </div>
                         <div class="metric-item">
                             <span class="metric-label">RSI(14)強度</span>
-                            <span class="metric-val">85.8%</span>
+                            <span class="metric-val">78.9%</span>
                         </div>
                     </div>
                 </div>
@@ -456,7 +456,7 @@
                             <div class="scen-title">保守回測支撐</div>
                             <div class="scen-desc">回測月線尋求防守</div>
                         </div>
-                        <div class="scen-val neutral-color">27.53</div>
+                        <div class="scen-val neutral-color">28.38</div>
                     </div>
 
                     <div class="scenario-box neut">
@@ -472,7 +472,7 @@
                             <div class="scen-title">樂觀估值重估</div>
                             <div class="scen-desc">合併綜效顯現上看波段</div>
                         </div>
-                        <div class="scen-val text-target" style="color:var(--extreme-bull)">40.56</div>
+                        <div class="scen-val text-target" style="color:var(--extreme-bull)">40.19</div>
                     </div>
                 </div>
             </div>
@@ -489,7 +489,7 @@
     </div>
 
     <script>
-        const currentPrice = 32.45;
+        const currentPrice = 32.15;
 
         function calculateTarget() {
             const eps = parseFloat(document.getElementById('slide-eps').value);
